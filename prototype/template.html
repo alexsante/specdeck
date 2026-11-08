@@ -465,6 +465,8 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px s
 .facts b { display: block; font-size: 12.5px; margin-bottom: 1px; }
 .facts .d { color: var(--dim); font-size: 12px; line-height: 1.45; }
 .wl .wl-err { color: var(--bad); margin: 12px 0 0; font-size: 12.5px; max-width: 46ch; overflow-wrap: anywhere; }
+.side h6 .home { all: unset; cursor: pointer; border-radius: 4px; }
+.side h6 .home:hover { color: var(--fg); }
 .facts .gh-ok { color: var(--ok); } .facts .gh-off { color: var(--warn); }
 .recent .rp { font: inherit; color: inherit; background: none; border: 0; border-top: 1px solid var(--line); width: 100%; box-sizing: border-box; text-align: left; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 14px; cursor: pointer; }
 .recent > header + .rp { border-top: 0; }
@@ -636,7 +638,7 @@ function renderSide() {
   const navs = NAVS.map(([k, l]) => [k, l, LISTS[k].length]);
   const stageBtn = s => `<button class="${state.stage === s && state.view === "project" ? "on" : ""}" data-stage="${s}"><span class="dot" style="background:${STAGE_COLOR[s]}"></span>${s}<span class="n">${stageCount(s)}</span></button>`;
   document.getElementById("side").innerHTML = `
-    <div><h6>Projects</h6><div class="nav">
+    <div><h6><button class="home" data-home title="Welcome and recent projects (${KEY_HOME})">Projects</button></h6><div class="nav">
       <button class="on"><span class="proj"><span class="ic">N</span>${esc(DATA.project)}</span><span class="n">${F.length}</span></button>
       ${recents.filter(r => r.ok && !isOpen(r)).map(r => `<button data-recent="${esc(r.path)}" title="${esc(shown(r))}"><span class="proj"><span class="ic" style="background:var(--surface-2);color:var(--dim)">${esc(r.name[0].toUpperCase())}</span>${esc(r.name)}</span><span class="n">${r.specs}</span></button>`).join("")}
     </div><button class="open">+ Open project…</button></div>
@@ -921,6 +923,7 @@ function renderTimeline() {
 // ---------- welcome view and opening splash ----------
 const IS_MAC = /Mac/.test(navigator.platform || navigator.userAgent);
 const KEY_OPEN = IS_MAC ? "⌘O" : "Ctrl+O";
+const KEY_HOME = IS_MAC ? "⌘⇧O" : "Ctrl+Shift+O";
 const MARK = `<div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h9M8 12h11M6 17h7"/></svg></div>`;
 const FI = {
   read: '<path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
@@ -956,7 +959,7 @@ function recentHtml(r) {
   if (!r.ok) return `<div class="rp missing">${tile}<span style="min-width:0"><span class="nm">${esc(r.name)}</span><span class="pth" title="${esc(shown(r))}">${esc(shown(r))}</span>
     <span class="meta">Folder not found. It may have moved or been deleted.</span></span><button class="forget" data-forget="${esc(r.path)}">Remove</button></div>`;
   return `<button class="rp" data-recent="${esc(r.path)}">${tile}<span style="min-width:0"><span class="nm">${esc(r.name)}</span><span class="pth" title="${esc(shown(r))}">${esc(shown(r))}</span>
-    <span class="meta"><span>${plural(r.specs, "spec")}${r.building ? ` · ${r.building} building` : ""}</span>${r.branch ? `<span class="mono">⎇ ${esc(r.branch)}</span>` : ""}</span></span><span class="when">${esc(openedAgo(r.opened))}</span></button>`;
+    <span class="meta"><span>${plural(r.specs, "spec")}${r.building ? ` · ${r.building} building` : ""}</span>${r.branch ? `<span class="mono">⎇ ${esc(r.branch)}</span>` : ""}</span></span><span class="when">${isOpen(r) ? "Open now" : esc(openedAgo(r.opened))}</span></button>`;
 }
 function welcomeHtml() {
   const gh = ghReady.ok ? `Threads and comments go through the GitHub CLI. <span class="gh-ok">Signed in${ghReady.login ? " as " + esc(ghReady.login) : ""}.</span>`
@@ -964,7 +967,7 @@ function welcomeHtml() {
   return `<div class="start" id="start"><div class="wl">
     <div>${MARK}<h1>Spec Deck</h1>
       <p class="lead">See where every spec in a Spec Kit project stands: what's in flight, what's waiting on you, and what the agent decided without asking.</p>
-      <div class="acts"><button class="btn primary lg" data-pick>Open project…</button><kbd>${KEY_OPEN}</kbd></div>
+      <div class="acts"><button class="btn primary lg" data-pick>Open project…</button><kbd>${KEY_OPEN}</kbd>${DATA ? `<button class="btn lg" data-home-back>Back to ${esc(DATA.project)}</button>` : ""}</div>
       ${welcomeError ? `<p class="wl-err">${esc(welcomeError)}</p>` : ""}
       <ul class="facts">
         <li>${fi("read")}<div><b>Reads, never writes</b><span class="d">Spec Deck reads <span class="mono">specs/</span> and <span class="mono">.specify/</span>. Your repo stays exactly as it is.</span></div></li>
@@ -1246,6 +1249,19 @@ document.addEventListener("keydown", e => {
   else if (e.key === "ArrowLeft") stepModal(-1);
   else if (e.key === "ArrowRight") stepModal(1);
 });
+// Welcome view from anywhere: the sidebar's Projects heading or Cmd/Ctrl+Shift+O. Back with the
+// button, Esc, or the open project's row in the recent list.
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-home],[data-home-back],.start [data-recent]");
+  if (!el) return;
+  if ("home" in el.dataset) { location.hash = "welcome"; return; }
+  const r = el.dataset.recent && recents.find(x => x.path === el.dataset.recent);
+  if ("homeBack" in el.dataset || (r && isOpen(r))) { e.stopImmediatePropagation(); location.hash = ""; }
+}, true);
+document.addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); location.hash = "welcome"; }
+  else if (e.key === "Escape" && state.view === "welcome" && DATA && !state.modal) location.hash = "";
+});
 // @start-handlers-start (mockup; scripts/make_ui.py swaps in the app's handlers)
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-recent],[data-forget],.start [data-pick],.side .open");
@@ -1260,7 +1276,7 @@ document.addEventListener("click", e => {
   location.hash = "welcome"; // "Open project…" in the mockup shows the welcome view
 });
 document.addEventListener("keydown", e => {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "o") { e.preventDefault(); toast("Opens the folder picker (mockup)"); }
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); toast("Opens the folder picker (mockup)"); }
 });
 for (const [ev, on] of [["dragover", true], ["dragleave", false], ["drop", false]]) {
   document.addEventListener(ev, e => {
