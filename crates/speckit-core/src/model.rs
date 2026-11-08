@@ -57,6 +57,16 @@ pub struct Story {
     pub n: u32,
     pub title: String,
     pub priority: String,
+    pub body: StoryBody,
+}
+
+/// The parts of a user story section. Markdown (bold, code) is kept for display.
+#[derive(Debug, Clone, Serialize)]
+pub struct StoryBody {
+    pub description: String,
+    pub why: Option<String>,
+    pub test: Option<String>,
+    pub scenarios: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -91,6 +101,10 @@ pub struct Task {
     pub story: Option<String>,
     pub tags: Vec<String>,
     pub text: String,
+    /// The full task text after the tags, markdown kept.
+    pub raw: String,
+    /// Code spans that look like file paths.
+    pub files: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -105,6 +119,7 @@ pub struct Pass {
     pub label: String,
     pub gate: Option<String>,
     pub verdict: Option<String>,
+    pub date: Option<String>,
     pub findings: Vec<Finding>,
 }
 
@@ -112,6 +127,9 @@ pub struct Pass {
 pub struct Finding {
     pub id: String,
     pub severity: String,
+    /// Task IDs (T001) and user stories (US1) the finding mentions.
+    pub tasks: Vec<String>,
+    pub stories: Vec<String>,
     pub owner: Option<String>,
     pub status: Option<String>,
     pub resolved: bool,

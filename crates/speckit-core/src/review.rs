@@ -18,6 +18,15 @@ re!(CURRENT_VERDICT, r"(?i)current verdict[^:]*:\s*\**\s*(pass|fail)");
 re!(GATE_REVIEW, r"\bREVIEW\b|post-?implementation");
 re!(GATE_ANALYZE, r"(?i)\bANALYZE\b|pre-?implementation");
 re!(SEVERITY_HEADER, r"(?i)\|\s*Severity\s*\|");
+re!(TASK_ID, r"\bT\d{3}\b");
+re!(STORY_ID, r"\bUS\d+\b");
+re!(DATE, r"\d{4}-\d{2}-\d{2}");
+re!(DATE_LINE, r"(?m)^\*\*Date\*\*:\s*(\d{4}-\d{2}-\d{2})");
+
+fn mentions(re: &regex::Regex, text: &str) -> Vec<String> {
+    let set: std::collections::BTreeSet<String> = re.find_iter(text).map(|m| m.as_str().to_string()).collect();
+    set.into_iter().collect()
+}
 
 fn severity_alias(s: &str) -> &str {
     match s {
@@ -84,14 +93,19 @@ pub fn parse_findings(text: &str) -> Vec<Finding> {
                     .map(|w| RESOLVED.contains(&w.to_lowercase().trim_matches(|c| c == '.' || c == ',' || c == ':')))
                     .unwrap_or(false);
                 let owner = strip_md(get("owner"));
+                let desc = first(&["finding", "summary", "description", "issue", "evidence"]);
+                let fix = first(&["recommended fix", "recommendation", "suggestion", "resolution"]);
+                let full = format!("{desc} {fix}");
                 out.push(Finding {
                     id: strip_md(get("id")),
                     severity: sev,
+                    tasks: mentions(&TASK_ID, &full),
+                    stories: mentions(&STORY_ID, &full),
                     owner: (!owner.is_empty()).then_some(owner),
                     status: (!status.is_empty()).then_some(status),
                     resolved,
-                    text: clip(&first(&["finding", "summary", "description", "issue", "evidence"]), 300),
-                    fix: clip(&first(&["recommended fix", "recommendation", "suggestion", "resolution"]), 240),
+                    text: clip(&desc, 300),
+                    fix: clip(&fix, 240),
                 });
             }
             i += 1;
@@ -116,10 +130,15 @@ pub fn parse_review(text: &str) -> Review {
         let v = find_verdict(sec);
         let f = parse_findings(sec);
         if v.is_some() || passes.is_empty() {
+            let date = DATE
+                .find(&heading)
+                .map(|m| m.as_str().to_string())
+                .or_else(|| DATE_LINE.captures(sec).map(|c| c[1].to_string()));
             passes.push(Pass {
                 label: strip_md(&heading),
                 gate: gate_of(&heading).or_else(|| gate_of(&title)),
                 verdict: v,
+                date,
                 findings: f,
             });
         } else {
@@ -130,8 +149,12 @@ pub fn parse_review(text: &str) -> Review {
             }
         }
     }
+    // The review's header date belongs to its first pass.
+    let pre_date = DATE_LINE.captures(preamble).map(|c| c[1].to_string());
     if passes.is_empty() {
-        passes.push(Pass { label: title.clone(), gate: gate_of(&title), verdict: find_verdict(preamble), findings: vec![] });
+        passes.push(Pass { label: title.clone(), gate: gate_of(&title), verdict: find_verdict(preamble), date: pre_date, findings: vec![] });
+    } else if passes[0].date.is_none() {
+        passes[0].date = pre_date;
     }
 
     // A preamble "Current verdict" line is the fallback for the overall verdict.

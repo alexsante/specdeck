@@ -78,10 +78,13 @@ Layout:
 Cargo.toml                  workspace
 crates/speckit-core/        parser + model (port of prototype/extract.py), `speckit-dump` CLI
 app/src-tauri/              Tauri 2 app: commands, file watcher, markdown rendering (comrak)
-app/ui/index.html           interface (derived from prototype/template.html, then edited directly)
+app/ui/index.html           interface, generated from prototype/template.html by scripts/make_ui.py
 app/ui/vendor/              Mermaid 12.2.0, bundled for offline use
 scripts/parity.py           diff the Rust and Python parser output
+scripts/make_ui.py          turn the mockup template into the app interface
 ```
+
+Design workflow: change `prototype/template.html`, review it as the mockup (`python3 -I prototype/build.py`, open `prototype/mockup.html`), then regenerate the app interface with `python3 -I scripts/make_ui.py prototype/template.html app/ui/index.html`. Don't edit `app/ui/index.html` by hand; the next regeneration overwrites it. The script stops if a template change breaks one of its anchors.
 
 Run it:
 
@@ -102,5 +105,7 @@ What the proof of concept proves:
 - Interface to Rust calls, folder picker, remembered last project, links opening in the browser, clipboard.
 - Live reload: editing a `tasks.md` pushes a new model about 120 ms later. On Linux, file *reads* also raise watch events; they are filtered out, or every reload would trigger another.
 - Documents rendered by comrak, Mermaid drawn in the web view.
+- Timeline v2 (approved 2026-11-08): fixed label column, grouping by ticket or stage, true-length bars with tasks-done fill and idle hatching, lifecycle milestones (created, clarify sessions by who decided, analyze and review passes, merge), dependency arrows for the selected spec, lead-time summary.
+- Task and user-story detail modals: full task text, files (open with the default app), linked story, review findings that mention the task or story; story description, why-this-priority, independent test, Given/When/Then scenarios, tasks. Arrow keys step through, Esc closes.
 
 Known gaps: no recent-projects list yet (only the last one); no specs from other branches (v2); the window title does not follow the view; git dates are re-read on every reload (could be cached until `.git/logs/HEAD` changes); unsigned and unbundled. The interface was checked in headless Chromium with the real data and on the live app through its logs; it has not yet been looked at on screen in WebKitGTK.

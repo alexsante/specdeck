@@ -215,6 +215,18 @@ fn open_feature(state: State<AppState>, feature: String, reveal: bool) -> Result
     system_open(&p.display().to_string(), reveal)
 }
 
+/// Open a repo-relative path (a task's file, a spec's tasks.md) with the default app.
+/// Paths outside the open repo are refused; missing files get a clear message.
+#[tauri::command]
+fn open_path(state: State<AppState>, path: String) -> Result<(), String> {
+    let repo = std::fs::canonicalize(current_repo(&state)?).map_err(|e| e.to_string())?;
+    let p = std::fs::canonicalize(repo.join(&path)).map_err(|_| format!("{path} is not in this checkout."))?;
+    if !p.starts_with(&repo) {
+        return Err("That path is outside the project.".into());
+    }
+    system_open(&p.display().to_string(), false)
+}
+
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     if !(url.starts_with("https://") || url.starts_with("http://")) {
@@ -246,7 +258,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState::default())
-        .invoke_handler(tauri::generate_handler![current_project, pick_project, read_doc, open_feature, open_url, copy_text])
+        .invoke_handler(tauri::generate_handler![current_project, pick_project, read_doc, open_feature, open_path, open_url, copy_text])
         .run(tauri::generate_context!())
         .expect("error while running Spec Deck");
 }

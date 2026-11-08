@@ -33,7 +33,7 @@ fn feature(f: &Feature) -> Value {
                 "title": p.title, "total": p.total, "done": p.done, "deferred": p.deferred,
                 "stories": by_story.keys().collect::<Vec<_>>(),
                 "byStory": by_story,
-                "tasks": p.tasks.iter().map(|t| json!([t.id, t.done as u8, t.parallel as u8, t.story, t.text])).collect::<Vec<_>>(),
+                "tasks": p.tasks.iter().map(|t| json!([t.id, t.done as u8, t.parallel as u8, t.story, t.text, t.raw, t.files, t.tags])).collect::<Vec<_>>(),
             })
         })
         .collect();
@@ -52,7 +52,7 @@ fn feature(f: &Feature) -> Value {
         "input": spec.map(|s| clip(&s.input, 260)),
         "fr": spec.map_or(0, |s| s.fr), "nfr": spec.map_or(0, |s| s.nfr), "sc": spec.map_or(0, |s| s.sc),
         "markers": spec.map(|s| s.markers.clone()).unwrap_or_default(),
-        "stories": spec.map(|s| s.stories.iter().map(|st| json!([st.n, st.title, st.priority])).collect::<Vec<_>>()).unwrap_or_default(),
+        "stories": spec.map(|s| s.stories.iter().map(|st| json!([st.n, st.title, st.priority, st.body])).collect::<Vec<_>>()).unwrap_or_default(),
         "sessions": spec.map(|s| s.sessions.iter().map(|se| json!({
             "date": se.date, "label": clip(&se.label, 90), "kind": se.kind, "n": se.qa.len(),
             "qa": se.qa.iter().map(|q| json!([q.q, q.a])).collect::<Vec<_>>(),

@@ -1,8 +1,8 @@
 //! spec.md: header fields, user stories, requirement counts, open-question
 //! markers and clarification sessions.
 
-use crate::model::{Qa, Session, Spec, Story};
-use crate::text::{clip, re, sections, strip_md};
+use crate::model::{Qa, Session, Spec, Story, StoryBody};
+use crate::text::{clip, cut, re, sections, strip_md};
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -23,6 +23,12 @@ re!(PARENS, r"^\((.*)\)$");
 re!(FR, r"\*\*FR-\d+");
 re!(NFR, r"\*\*NFR-\d+");
 re!(SC, r"\*\*SC-\d+");
+re!(STORY_STOP, r"(?m)^(#{1,3} |---\s*$)");
+re!(STORY_FIELD, r"(?m)^\*\*(Why this priority|Independent Test|Acceptance Scenarios)\*\*:?");
+re!(STORY_WHY, r"(?m)^\*\*Why this priority\*\*:\s*(.+)$");
+re!(STORY_TEST, r"(?m)^\*\*Independent Test\*\*:\s*(.+)$");
+re!(STORY_ACC, r"(?m)^\*\*Acceptance Scenarios\*\*:?");
+re!(SCENARIO, r"(?m)^\d+\.\s+(.+)$");
 re!(HUMAN_WORDS, r"\b(human|locks?|locked|product decisions?|user-approved|accepted|binding)\b");
 
 /// Classify a `### Session …` heading by who made the decisions.
@@ -45,6 +51,17 @@ pub fn session_kind(heading: &str) -> &'static str {
     "unlabeled"
 }
 
+/// Description, why-this-priority, independent test and numbered acceptance scenarios.
+pub fn parse_story_body(body: &str) -> StoryBody {
+    let desc = &body[..STORY_FIELD.find(body).map_or(body.len(), |m| m.start())];
+    let field = |re: &regex::Regex, n: usize| re.captures(body).map(|c| cut(c[1].trim(), n));
+    let scenarios = STORY_ACC
+        .find(body)
+        .map(|m| SCENARIO.captures_iter(&body[m.end()..]).map(|c| cut(c[1].trim(), 600)).collect())
+        .unwrap_or_default();
+    StoryBody { description: cut(desc.trim(), 900), why: field(&STORY_WHY, 500), test: field(&STORY_TEST, 600), scenarios }
+}
+
 pub fn parse_spec(text: &str) -> Spec {
     let title = H1.captures(text).map(|c| c[1].to_string()).unwrap_or_default();
     let title = FEATURE_PREFIX.replace(&title, "").trim().to_string();
@@ -59,7 +76,11 @@ pub fn parse_spec(text: &str) -> Spec {
 
     let stories = STORY
         .captures_iter(text)
-        .map(|c| Story { n: c[1].parse().unwrap_or(0), title: clip(&c[2], 90), priority: c[3].to_string() })
+        .map(|c| {
+            let rest = &text[c.get(0).unwrap().end()..];
+            let body = &rest[..STORY_STOP.find(rest).map_or(rest.len(), |m| m.start())];
+            Story { n: c[1].parse().unwrap_or(0), title: clip(&c[2], 90), priority: c[3].to_string(), body: parse_story_body(body) }
+        })
         .collect();
 
     let clar = sections(text, 2)
@@ -123,6 +144,17 @@ mod tests {
         assert_eq!(session_kind("Session 2026-11-08: Attention model (proposed by agent, confirmed by human)"), "human");
         assert_eq!(session_kind("Session 2026-09-03: Brownfield and prior-spec conflicts (**FLAGGED**)"), "flagged");
         assert_eq!(session_kind("Session 2026-09-03"), "unlabeled");
+    }
+
+    #[test]
+    fn parses_story_bodies() {
+        let md = "# T\n\n### User Story 1 - Sign in (Priority: P1)\n\nA user signs in.\n\n**Why this priority**: Everything needs it.\n\n**Independent Test**: Sign in once.\n\n**Acceptance Scenarios**:\n\n1. **Given** a user, **When** they sign in, **Then** they see home.\n2. **Given** a bad password, **When** they sign in, **Then** they see an error.\n\n---\n\n### Edge Cases\n";
+        let s = parse_spec(md);
+        let b = &s.stories[0].body;
+        assert_eq!(b.description, "A user signs in.");
+        assert_eq!(b.why.as_deref(), Some("Everything needs it."));
+        assert_eq!(b.test.as_deref(), Some("Sign in once."));
+        assert_eq!(b.scenarios.len(), 2);
     }
 
     #[test]

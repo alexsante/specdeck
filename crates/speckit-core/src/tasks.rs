@@ -10,6 +10,21 @@ re!(TAG, r"^\[([^\]]+)\]\s*");
 re!(STORY_TAG, r"^US\d+$");
 re!(PHASE_PREFIX, r"^Phase\s*\d+\s*[:—–-]\s*");
 re!(DEFERRED, r"(?i)^deferred\b");
+re!(FILE_SPAN, r"`([^`\s]+)`");
+re!(FILE_EXT, r"\.[A-Za-z]{1,5}$");
+
+/// Code spans that look like paths: contain a slash or end in a file extension.
+pub fn task_files(text: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for c in FILE_SPAN.captures_iter(text) {
+        let span = c[1].trim_end_matches(['.', ',', ':', ';']).to_string();
+        if (span.contains('/') || FILE_EXT.is_match(&span)) && !span.starts_with("http") && !out.contains(&span) {
+            out.push(span);
+        }
+    }
+    out.truncate(10);
+    out
+}
 
 pub fn parse_tasks(text: &str) -> Vec<Phase> {
     let mut phases: Vec<Phase> = Vec::new();
@@ -47,6 +62,11 @@ pub fn parse_tasks(text: &str) -> Vec<Phase> {
             story: tags.iter().find(|t| STORY_TAG.is_match(t)).cloned(),
             tags: tags.iter().filter(|t| *t != "P" && !STORY_TAG.is_match(t)).cloned().collect(),
             text: clip(rest, 160),
+            raw: {
+                let r = rest.trim();
+                if r.chars().count() <= 1200 { r.to_string() } else { format!("{}…", r.chars().take(1199).collect::<String>()) }
+            },
+            files: task_files(rest),
         });
     }
 
@@ -63,6 +83,12 @@ pub fn parse_tasks(text: &str) -> Vec<Phase> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn finds_file_paths() {
+        let f = task_files("Edit `apps/web/src/main.tsx`, `README.md` and `make test`; see `https://x.io/a`.");
+        assert_eq!(f, vec!["apps/web/src/main.tsx", "README.md"]);
+    }
 
     #[test]
     fn handles_variants() {

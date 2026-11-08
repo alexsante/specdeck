@@ -51,6 +51,15 @@ pub fn sections(text: &str, level: usize) -> Vec<(String, String)> {
     out
 }
 
+/// Cut to `n` characters with an ellipsis, without touching markup.
+pub fn cut(s: &str, n: usize) -> String {
+    if s.chars().count() <= n {
+        return s.to_string();
+    }
+    let c: String = s.chars().take(n - 1).collect();
+    format!("{}…", c.trim_end())
+}
+
 /// Read a UTF-8 file, normalizing line endings. Missing, unreadable, or
 /// non-UTF-8 files (and directories) read as `None`.
 pub fn read(path: &std::path::Path) -> Option<String> {

@@ -441,6 +441,8 @@ a:hover { text-decoration: underline; }
 .task:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); border-radius: 5px; }
 .story:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .nextbox, .kpi.clickable { cursor: pointer; }
+.mdlink { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+.mdlink:hover { text-decoration-style: solid; }
 </style>
 </head>
 <body>
@@ -831,8 +833,13 @@ function renderTimeline() {
 }
 
 // ---------- detail modals ----------
-function mdInline(s) {
-  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>")
+// Inline markdown for modal text. Web links open in the browser; relative links
+// (./data-model.md) are resolved against the spec folder and open with the default app.
+function mdInline(s, base) {
+  return esc(s)
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, text, href) => /^https?:/.test(href) ? `<a href="${href}" target="_blank" rel="noopener">${text}</a>`
+      : base && !href.startsWith("#") ? `<button class="mdlink" data-openpath="${base}${href.replace(/^\.\//, "").replace(/#.*$/, "")}">${text}</button>` : text)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*(.+?)\*\*/g, (m, x) => /^(given|when|then|and)$/i.test(x) ? `<b class="gwt gwt-${x.toLowerCase()}">${x}</b>` : `<b>${x}</b>`);
 }
 const allTasks = f => f.phases.flatMap((p, pi) => (p.tasks || []).map(t => ({ p, pi, t })));
@@ -862,13 +869,13 @@ function taskModal(f, id) {
     <div class="eyebrow2"><span class="mono">${esc(f.ticket)}</span> · ${esc(f.title)} · Phase ${pi + 1}: ${esc(p.title)}</div>
     <h2 id="dlg-title"><span class="mono tid">${tid}</span>${status}</h2>
     <div class="chips">${par ? `<span class="chip calm">Parallel-safe [P]</span>` : ""}${st ? `<button class="linkchip k-unlabeled" data-story="${esc(st.slice(2))}">${esc(st)}</button>` : ""}${(tags || []).map(x => `<span class="chip k-unlabeled">${esc(x)}</span>`).join("")}${p.deferred ? `<span class="chip calm">Deferred phase</span>` : ""}</div>
-    <p class="lead">${mdInline(raw || tx)}</p>
-    ${files?.length ? `<section><h3>Files<span class="dim">${files.length}</span></h3><ul class="files">${files.map(x => `<li><span class="mono">${esc(x)}</span><button class="btn sm" data-toast="Opens ${esc(x)} in your editor">Open</button></li>`).join("")}</ul></section>` : ""}
+    <p class="lead">${mdInline(raw || tx, `specs/${esc(f.id)}/`)}</p>
+    ${files?.length ? `<section><h3>Files<span class="dim">${files.length}</span></h3><ul class="files">${files.map(x => `<li><span class="mono">${esc(x)}</span><button class="btn sm" data-openpath="${esc(x)}">Open</button></li>`).join("")}</ul></section>` : ""}
     ${story ? `<section><h3>User story</h3><button class="storycard" data-story="${story[0]}"><span class="pr ${story[2]}">${story[2]}</span><span><span class="dim">US${story[0]}</span> ${esc(story[1])}</span>${prog(sTasks.filter(x => x.t[1]).length, sTasks.length)}</button></section>` : ""}
     <section><h3>Mentioned in review<span class="dim">${finds.length}</span></h3>${finds.length ? finds.map(findingRow).join("") : `<p class="dim" style="margin:0">No review finding mentions ${tid}.</p>`}</section>
   </div>
   <footer class="df"><span class="hint"><kbd>←</kbd> <kbd>→</kbd> step through tasks · <kbd>Esc</kbd> close</span>
-    <button class="btn" data-copy="specs/${esc(f.id)}/tasks.md ${tid}">Copy reference</button><button class="btn" data-toast="Opens tasks.md at ${tid} in your editor">Open tasks.md</button></footer>`;
+    <button class="btn" data-copy="specs/${esc(f.id)}/tasks.md ${tid}">Copy reference</button><button class="btn" data-openpath="specs/${esc(f.id)}/tasks.md">Open tasks.md</button></footer>`;
 }
 function storyModal(f, n) {
   const i = f.stories.findIndex(x => x[0] === n);
@@ -878,21 +885,24 @@ function storyModal(f, n) {
   const finds = findingsFor(f, x => (x.stories || []).includes("US" + sn));
   const byPhase = new Map();
   ts.forEach(x => { if (!byPhase.has(x.pi)) byPhase.set(x.pi, []); byPhase.get(x.pi).push(x); });
-  const scen = (body?.scenarios || []).map(x => mdInline(x).replace(/,?\s*(<b class="gwt gwt-(when|then|and)">)/g, "<br>$1"));
+  const scen = (body?.scenarios || []).map(x => mdInline(x, `specs/${esc(f.id)}/`).replace(/,?\s*(<b class="gwt gwt-(when|then|and)">)/g, "<br>$1"));
   return `${modalHeader(i, f.stories.length, "story")}
   <div class="db">
     <div class="eyebrow2"><span class="mono">${esc(f.ticket)}</span> · ${esc(f.title)}</div>
     <h2 id="dlg-title"><span class="chip ${pr === "P1" ? "calm" : "k-unlabeled"}">${esc(pr)}</span><span><span class="dim">US${sn}</span> ${esc(title)}</span></h2>
     <div class="sprog">${prog(done, ts.length)}<span class="dim" style="font-size:12px">${ts.length ? "tasks tagged [US" + sn + "]" : ""}</span></div>
-    ${body?.description ? `<p class="lead">${mdInline(body.description)}</p>` : ""}
-    ${body?.why || body?.test ? `<div class="callouts">${body.why ? `<div class="callout"><h4>Why this priority</h4><p>${mdInline(body.why)}</p></div>` : ""}${body.test ? `<div class="callout"><h4>Independent test</h4><p>${mdInline(body.test)}</p></div>` : ""}</div>` : ""}
+    ${body?.description ? `<p class="lead">${mdInline(body.description, `specs/${esc(f.id)}/`)}</p>` : ""}
+    ${body?.why || body?.test ? `<div class="callouts">${body.why ? `<div class="callout"><h4>Why this priority</h4><p>${mdInline(body.why, `specs/${esc(f.id)}/`)}</p></div>` : ""}${body.test ? `<div class="callout"><h4>Independent test</h4><p>${mdInline(body.test, `specs/${esc(f.id)}/`)}</p></div>` : ""}</div>` : ""}
     ${scen.length ? `<section><h3>Acceptance scenarios<span class="dim">${scen.length}</span></h3><ol class="scen">${scen.map(x => `<li>${x}</li>`).join("")}</ol></section>` : ""}
     <section><h3>Tasks<span class="dim">${done}/${ts.length}</span></h3>${ts.length ? `<div class="mtasks">${[...byPhase.entries()].map(([pi, xs]) => `<div class="ph2">Phase ${pi + 1}: ${esc(f.phases[pi].title)}</div>` + xs.map(({ t }) => `<div class="mtask ${t[1] ? "done" : ""} ${f.next?.[0] === t[0] ? "next" : ""}" data-task="${esc(t[0])}"><span class="cb"></span><span class="mono dim">${esc(t[0])}</span><span class="tx">${esc(t[4])}</span></div>`).join("")).join("")}</div>` : `<p class="dim" style="margin:0">No tasks are tagged [US${sn}].</p>`}</section>
     <section><h3>Mentioned in review<span class="dim">${finds.length}</span></h3>${finds.length ? finds.map(findingRow).join("") : `<p class="dim" style="margin:0">No review finding mentions US${sn}.</p>`}</section>
   </div>
   <footer class="df"><span class="hint"><kbd>←</kbd> <kbd>→</kbd> step through stories · <kbd>Esc</kbd> close</span>
-    <button class="btn" data-copy="specs/${esc(f.id)}/spec.md US${sn}">Copy reference</button><button class="btn" data-toast="Opens spec.md at US${sn} in your editor">Open spec.md</button></footer>`;
+    <button class="btn" data-copy="specs/${esc(f.id)}/spec.md US${sn}">Copy reference</button><button class="btn" data-openpath="specs/${esc(f.id)}/spec.md">Open spec.md</button></footer>`;
 }
+// Opens a repo-relative path with the system's default app (the app build replaces this).
+function openPath(p) { toast(`Opens <code>${esc(p)}</code> in your editor (mockup)`); }
+
 function renderModal() {
   const host = document.getElementById("modal"), m = state.modal, f = m && byId[m.spec];
   const html = f && (m.type === "task" ? taskModal(f, m.key) : storyModal(f, +m.key));
@@ -1020,7 +1030,7 @@ function toast(html) {
 }
 
 document.addEventListener("click", e => {
-  const el = e.target.closest("[data-close],[data-mnav],[data-task],[data-story],[data-tlset],[data-tltoday],[data-tlgroup],[data-zoom],[data-tlsel],[data-open],[data-nav],[data-stage],[data-group],[data-back],[data-toggle-done],[data-phase],[data-sess],[data-dkind],[data-doc],[data-copy],[data-toast]");
+  const el = e.target.closest("[data-openpath],[data-close],[data-mnav],[data-task],[data-story],[data-tlset],[data-tltoday],[data-tlgroup],[data-zoom],[data-tlsel],[data-open],[data-nav],[data-stage],[data-group],[data-back],[data-toggle-done],[data-phase],[data-sess],[data-dkind],[data-doc],[data-copy],[data-toast]");
   if (!el) return;
   const ds = el.dataset;
   if (ds.open) { location.hash = ds.open; return; }
@@ -1050,6 +1060,7 @@ document.addEventListener("click", e => {
   else if (ds.copy) { const ok = () => toast(`Copied <code>${esc(ds.copy)}</code>`), no = () => toast(`Copy blocked here. Command: <code>${esc(ds.copy)}</code>`);
     try { navigator.clipboard.writeText(ds.copy).then(ok, no); } catch { no(); } return; }
   else if (ds.toast) { toast(esc(ds.toast) + " (mockup)"); return; }
+  else if (ds.openpath) { openPath(ds.openpath); return; }
   render();
 });
 document.addEventListener("change", e => {
