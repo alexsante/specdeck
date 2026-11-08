@@ -14,7 +14,7 @@ def clip(s, n):
 
 
 def slim(f):
-    detailed = f["stage"] != "Done"
+    detailed = True  # artifacts allow 16 MB; every spec carries full detail
     s = f["spec"] or {}
     out = {k: f[k] for k in ("id", "ticket", "slug", "stage", "stageSource", "files", "lastCommit", "firstCommit", "refs")}
     out["contracts"] = len(f["contracts"])
@@ -24,7 +24,7 @@ def slim(f):
         "clickup": s.get("clickup"), "input": clip(s.get("input"), 260),
         "fr": s.get("fr", 0), "nfr": s.get("nfr", 0), "sc": s.get("sc", 0),
         "markers": s.get("markers", []),
-        "stories": [[st["n"], st["title"], st["priority"]] for st in s.get("stories", [])],
+        "stories": [[st["n"], st["title"], st["priority"], st.get("body")] for st in s.get("stories", [])],
         "sessions": [{
             "date": se["date"], "label": clip(se["label"], 90), "kind": se["kind"], "n": len(se["qa"]),
             "qa": [[clip(q["q"], 170), clip(q["a"], 210)] for q in se["qa"]] if detailed else [],
@@ -43,14 +43,14 @@ def slim(f):
                 b[0] += t["done"]
         if detailed:
             ph["tasks"] = [[t["id"], int(t["done"]), int(t["parallel"]), t["story"],
-                            clip(t["text"], 120)] for t in p["tasks"]]
+                            clip(t["text"], 120), t.get("raw"), t.get("files", []), t.get("tags", [])] for t in p["tasks"]]
         phases.append(ph)
     out["phases"] = phases
     nxt = next((t for p in f["tasks"] or [] for t in p["tasks"] if not t["done"]), None)
     out["next"] = [nxt["id"], clip(nxt["text"], 120)] if nxt else None
     r = f["review"]
     out["review"] = {"verdict": r["verdict"], "title": clip(r["title"], 100), "passes": [{
-        "label": clip(p["label"], 90), "gate": p["gate"], "verdict": p["verdict"],
+        "label": clip(p["label"], 90), "gate": p["gate"], "verdict": p["verdict"], "date": p.get("date"),
         "findings": [{**x, "text": clip(x["text"], 240), "fix": clip(x["fix"], 180)} for x in p["findings"]],
     } for p in r["passes"]]} if r else None
     out["checklists"] = [sum(c["done"] for c in f["checklists"]),

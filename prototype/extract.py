@@ -82,6 +82,24 @@ def session_kind(heading):
     return "unlabeled"
 
 
+STORY_FIELD_RE = re.compile(r"^\*\*(Why this priority|Independent Test|Acceptance Scenarios)\*\*:?", re.M)
+
+
+def parse_story_body(body):
+    """Description, why-this-priority, independent test and numbered
+    acceptance scenarios. Markdown (bold, code) is kept for display."""
+    first = STORY_FIELD_RE.search(body)
+    desc = (body[: first.start()] if first else body).strip()
+    why = re.search(r"^\*\*Why this priority\*\*:\s*(.+)$", body, re.M)
+    test = re.search(r"^\*\*Independent Test\*\*:\s*(.+)$", body, re.M)
+    acc = re.search(r"^\*\*Acceptance Scenarios\*\*:?", body, re.M)
+    scenarios = re.findall(r"^\d+\.\s+(.+)$", body[acc.end():], re.M) if acc else []
+    cut = lambda x, n: x if len(x) <= n else x[: n - 1].rstrip() + "…"
+    return {"description": cut(desc, 900), "why": cut(why.group(1).strip(), 500) if why else None,
+            "test": cut(test.group(1).strip(), 600) if test else None,
+            "scenarios": [cut(x.strip(), 600) for x in scenarios]}
+
+
 def parse_spec(text):
     if text is None:
         return None
@@ -96,8 +114,12 @@ def parse_spec(text):
     if m:
         clickup = m.group(0)
 
-    stories = [{"n": int(n), "title": clip(t, 90), "priority": p}
-               for n, t, p in STORY_RE.findall(text)]
+    stories = []
+    for m in STORY_RE.finditer(text):
+        rest = text[m.end():]
+        stop = re.search(r"^(#{1,3} |---\s*$)", rest, re.M)
+        stories.append({"n": int(m.group(1)), "title": clip(m.group(2), 90), "priority": m.group(3),
+                        "body": parse_story_body(rest[: stop.start()] if stop else rest)})
 
     sessions = []
     clar = next((b for h, b in sections(text, 2) if h.lower().startswith("clarifications")), "")
@@ -135,6 +157,19 @@ TASK_RE = re.compile(r"^\s*-\s*\[([ xX])\]\s*(?:\*\*)?(T\d+)(?:\*\*)?\s*(.*)$")
 TAG_RE = re.compile(r"^\[([^\]]+)\]\s*")
 
 
+FILE_SPAN_RE = re.compile(r"`([^`\s]+)`")
+
+
+def task_files(text):
+    """Code spans that look like paths: contain a slash or end in a file extension."""
+    out = []
+    for span in FILE_SPAN_RE.findall(text):
+        span = span.rstrip(".,:;")
+        if ("/" in span or re.search(r"\.[A-Za-z]{1,5}$", span)) and not span.startswith("http") and span not in out:
+            out.append(span)
+    return out[:10]
+
+
 def parse_tasks(text):
     if text is None:
         return None
@@ -167,6 +202,8 @@ def parse_tasks(text):
             "story": next((t for t in tags if re.fullmatch(r"US\d+", t)), None),
             "tags": [t for t in tags if t != "P" and not re.fullmatch(r"US\d+", t)],
             "text": clip(rest, 160),
+            "raw": rest.strip() if len(rest.strip()) <= 1200 else rest.strip()[:1199] + "…",
+            "files": task_files(rest),
         })
     phases = [p for p in phases if p["tasks"]]
     for p in phases:
@@ -217,7 +254,10 @@ def parse_findings(text):
                     desc = next((row[k] for k in ("finding", "summary", "description", "issue", "evidence") if row.get(k)), "")
                     fix = next((row[k] for k in ("recommended fix", "recommendation", "suggestion", "resolution") if row.get(k)), "")
                     status = strip_md(row.get("status", "")) or None
+                    full = desc + " " + fix
                     out.append({"id": strip_md(row.get("id", "")), "severity": sev,
+                                "tasks": sorted(set(re.findall(r"\bT\d{3}\b", full))),
+                                "stories": sorted(set(re.findall(r"\bUS\d+\b", full))),
                                 "owner": strip_md(row.get("owner", "")) or None, "status": status,
                                 "resolved": bool(status and status.split()[0].lower().strip(".,:") in RESOLVED),
                                 "text": clip(desc, 300), "fix": clip(fix, 240)})
@@ -243,13 +283,19 @@ def parse_review(text):
         v = find_verdict(sec)
         f = parse_findings(sec)
         if v or not passes:
+            date = re.search(r"\d{4}-\d{2}-\d{2}", heading) or re.search(r"^\*\*Date\*\*:\s*(\d{4}-\d{2}-\d{2})", sec, re.M)
             passes.append({"label": strip_md(heading), "gate": gate_of(heading) or gate_of(title),
-                           "verdict": v, "findings": f})
+                           "verdict": v, "date": (date.group(1) if date.re.groups else date.group(0)) if date else None,
+                           "findings": f})
         else:
             passes[-1]["findings"] += f
             passes[-1]["verdict"] = passes[-1]["verdict"] or v
+    pre_date = re.search(r"^\*\*Date\*\*:\s*(\d{4}-\d{2}-\d{2})", preamble, re.M)
     if not passes:
-        passes = [{"label": title, "gate": gate_of(title), "verdict": find_verdict(preamble), "findings": []}]
+        passes = [{"label": title, "gate": gate_of(title), "verdict": find_verdict(preamble),
+                   "date": pre_date.group(1) if pre_date else None, "findings": []}]
+    elif passes[0]["date"] is None and pre_date:
+        passes[0]["date"] = pre_date.group(1)  # the review's header date belongs to its first pass
     # A preamble "Current verdict" line wins for the overall verdict.
     cur = re.search(r"current verdict[^:]*:\s*\**\s*(pass|fail)", PASS_NAME_RE.sub("", preamble), re.I)
     latest = passes[-1]
