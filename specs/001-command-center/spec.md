@@ -1,10 +1,10 @@
-# Feature Specification: Spec Kit command center for macOS
+# Feature Specification: Spec Kit command center
 
 **Feature Directory**: `specs/001-command-center`
 **Feature Branch**: `001-command-center`
 **Created**: 2026-11-08
-**Status**: Clarified. All brainstorm questions answered by the human on 2026-11-08. Ready for `/speckit-plan`.
-**Input**: A standalone macOS app that, when pointed at a project that uses Spec Kit, reads the `specs/` tree and renders a command center: a project view that shows where every spec stands, and a per-spec view that shows the spec, plan, tasks, progress, open questions, and review health in one clean interface. Read-only. Personal tool first; may be shared with the team later.
+**Status**: Clarified. All brainstorm questions answered by the human on 2026-11-08; User Story 10 (PR review comments) added and clarified the same day. Ready for `/speckit-plan`.
+**Input**: A standalone desktop app (Linux first, then macOS, then Windows) that, when pointed at a project that uses Spec Kit, reads the `specs/` tree and renders a command center: a project view that shows where every spec stands, and a per-spec view that shows the spec, plan, tasks, progress, open questions, and review health in one clean interface. Read-only toward the repo; review comments go to the spec's GitHub pull request. Personal tool first; may be shared with the team later.
 **Working name**: Spec Deck (placeholder)
 **Reference repo**: `proj-nava` (104 feature folders, 2,044 tasks, 196 clarification sessions, 68 reviews), checked 2026-11-08.
 
@@ -12,7 +12,7 @@
 
 Spec Kit leaves a rich, structured trail in each feature folder, but the only way to read it today is to open markdown files one by one. With dozens of specs, an agent-driven pipeline, and work spread over many branches, it is hard to answer simple questions: what is in flight, what is blocked, what is next, and what did the agent decide without asking.
 
-The app answers those questions by reading the files. It never writes to the repo. It treats the files on disk as the only source of truth, derives state from which artifacts exist and what they contain, and updates live while an agent works.
+The app answers those questions by reading the files. It never writes to the repo. Discussion about a spec happens on its pull request (User Story 10), so GitHub holds identity, threads, and permissions and the app needs no backend. It treats the files on disk as the only source of truth, derives state from which artifacts exist and what they contain, and updates live while an agent works.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -117,7 +117,7 @@ I read `spec.md`, `plan.md`, `research.md`, `data-model.md`, `quickstart.md`, `c
 
 ### User Story 7 - Hand off to my tools (Priority: P3)
 
-From any spec I can open the folder in my editor, reveal it in Finder, open the ClickUp ticket, or copy the next Spec Kit command for that spec.
+From any spec I can open the folder in my editor, reveal it in the file manager, open the ClickUp ticket, or copy the next Spec Kit command for that spec.
 
 **Why this priority**: These keep the app read-only while making it useful in the workflow.
 
@@ -156,6 +156,26 @@ I see specs on a timeline, each bar running from its Created date to its merge (
 
 ---
 
+### User Story 10 - Discuss a spec on its pull request (Priority: P2)
+
+While reading a spec, plan, or tasks file, I comment on a paragraph, list item, table, or heading, and the comment lands as an inline review comment on that file in the branch's GitHub pull request. I see the PR's existing threads where they belong in the document, reply to them, and resolve them. GitHub provides identity, threads, and permissions; the app has no backend.
+
+**Why this priority**: Every spec in proj-nava lives on a branch with a PR, so this puts review where the team already works. It comes after the P1 views because it needs them to render the documents first.
+
+**Independent Test**: Open proj-nava on `feature/WB-27394-Campaign-Budgeting` (PR #217, 12 spec files and 109 code files). Comment on line 46 of `spec.md`, add it to a pending review, and submit. The comment appears on PR #217 at `specs/27394-campaign-budgeting/spec.md` line 46, and the thread shows under that paragraph in the app.
+
+**Acceptance Scenarios**:
+
+1. **Given** all readiness checks pass (FR-060), **When** I click **+** beside a block and write a comment, **Then** I can add it to a pending review or post it at once, and it attaches to that block's source lines on the PR's head commit.
+2. **Given** a comment is open, **When** I shift-click another block, **Then** the comment covers the lines from the first block to the last.
+3. **Given** a pending review, **When** I submit it, **Then** the comments post together as a review with the Comment event. Approve and Request changes are not offered; the dialog says to use GitHub for a verdict.
+4. **Given** the PR has review threads on spec files, **When** I open a document, **Then** open threads show under their block, resolved threads show collapsed, and outdated threads (their line has changed) appear only in the Conversations list with the text they were made on.
+5. **Given** an open thread, **When** I reply or resolve it, **Then** the change is made on GitHub. **When** I choose "Copy for agent", **Then** the clipboard holds a prompt naming the file, lines, PR, and the thread's comments.
+6. **Given** a readiness check fails, **When** I view the spec, **Then** the documents still render, commenting is disabled, and a one-line message names what is missing and the command that fixes it.
+7. **Given** a spec whose branch has been merged, **When** I view it, **Then** it has no comment action.
+
+---
+
 ### Edge Cases
 
 - A feature folder has no `spec.md` (8 in proj-nava, for example `008-cosmetics` with only `notes.md`). Show it as a "Fragment" outside the pipeline.
@@ -169,6 +189,10 @@ I see specs on a timeline, each bar running from its Created date to its merge (
 - The `**Status**:` header is free text and often stale (33 specs say "Draft", most of them finished). It is shown as a note, never used as the stage.
 - Two folders share a ticket number.
 - The repo is very large, or `specs/` is missing. The app says what it expected to find.
+- A PR holds the spec and its implementation together (PR #217 has 12 spec files and 109 code files). Listing its files needs the paginated API; `gh pr view --json files` stops at 100.
+- A spec file was edited on the branch but not added by it, so only the changed lines are in the PR diff. Comments outside those lines must fall back to a file-level comment.
+- The checked-out branch is behind or ahead of the PR head, or a spec file has uncommitted edits. Line numbers on screen may not match GitHub (FR-060).
+- The GitHub CLI is signed in to several accounts. The app uses the active one and shows its login.
 
 ## Requirements *(mandatory)*
 
@@ -218,7 +242,18 @@ I see specs on a timeline, each bar running from its Created date to its merge (
 - **FR-055**: The app MUST offer a "Waiting on me" view: specs (including Done specs) with open `[NEEDS CLARIFICATION: …]` markers, a FAIL verdict in the latest review pass, unresolved HIGH or CRITICAL findings in the latest pass, or flagged-conflict decision sessions on in-flight specs.
 - **FR-056**: The app MUST offer an "Unfinished" view: in-flight specs that are not fully planned (Specified, Clarified, Planned) or not fully built (Tasked, Analyzed, Building), marked "Stalled" after 14 days without a commit unless all open tasks are deferred.
 - **FR-053**: The app MUST remember recently opened projects.
-- **FR-054**: The app SHOULD offer open in editor, reveal in Finder, open ticket link, and copy next command.
+- **FR-054**: The app SHOULD offer open in editor, reveal in the file manager, open ticket link, and copy next command.
+
+**Review on GitHub**
+
+- **FR-060**: Before enabling comments, the app MUST check, in this order: the GitHub CLI (`gh`) is installed; it is signed in with a valid token; the remote responds; the checked-out branch has an open pull request; local `HEAD` equals the PR head commit; the file being viewed has no uncommitted changes. The first three failures disable reading and writing threads; the last three disable writing only (the last one for that file only). Each failure MUST show one line that names what is missing and how to fix it, with a "Check again" action.
+- **FR-061**: The app MUST talk to GitHub only through `gh` and MUST NOT store or read tokens itself.
+- **FR-062**: The app MUST map each rendered block (paragraph, list item, table, heading, code block) to its source line range, and post comments as multi-line review comments on those lines at the PR head commit. Lines outside the PR diff MUST fall back to a file-level comment.
+- **FR-063**: Comments MUST go into a pending review by default, with "Comment now" for a single comment. Reviews MUST be submitted with the Comment event only.
+- **FR-064**: The app MUST show the PR's review threads on files under the feature folder: open threads inline, resolved threads collapsed, outdated threads in the Conversations list with their original line text. It MUST support reply, resolve, and unresolve.
+- **FR-065**: The app MUST show a PR chip (number, state, open thread count) on the spec header, open-thread counts on document tabs, and an "Open review threads" view listing specs with open threads.
+- **FR-066**: "Copy for agent" MUST copy a prompt naming the file, line range, PR number, and the thread's comments. The app MUST NOT edit spec files in response to a thread (FR-002).
+- **FR-067**: GitHub access MUST sit behind an adapter interface (readiness, find review for branch, list threads, add comment, submit review, reply, resolve). Comment positions MUST carry base, start, and head commits so a GitLab adapter (using `glab`) can be added without changing callers.
 
 ### Key Entities
 
@@ -230,33 +265,39 @@ I see specs on a timeline, each bar running from its Created date to its merge (
 - **Open Question**: a `[NEEDS CLARIFICATION: …]` marker and where it appears.
 - **Review**: verdict and findings (ID, severity, owner, status, text, fix).
 - **Checklist**: name and done/total items.
+- **Change request**: the pull request (GitHub) or merge request (GitLab) for a feature's branch: number, state, head commit, file list.
+- **Review thread**: file, line range, state (open, resolved, outdated, pending), comments (author, time, text).
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Opening proj-nava (104 folders) shows the project view in under 2 seconds on a recent Mac.
+- **SC-001**: Opening proj-nava (104 folders) shows the project view in under 2 seconds on a recent laptop.
 - **SC-002**: Task counts match a direct count of checkbox task lines for 100% of `tasks.md` files in proj-nava.
 - **SC-003**: Zero false-positive open questions in proj-nava (today it has no real markers, so the count must be 0).
 - **SC-004**: From launch, I can name the next task of the current feature in under 10 seconds.
 - **SC-005**: A task checked off in an editor is reflected in the app within 2 seconds.
 - **SC-006**: Every artifact file in a feature folder is reachable from the spec view.
+- **SC-007**: For every block in every `spec.md`, `plan.md`, and `tasks.md` in proj-nava, the mapped line range covers exactly that block's source lines (checked against the Rust parser output, as with SC-002).
 
 ## Assumptions
 
-- The user runs macOS. The app is Mac-only.
-- Projects are local git checkouts. No network access is needed except to open links.
+- Platforms, in order: Linux first (where the app is built today), then macOS, then Windows. Tauri covers all three.
+- Projects are local git checkouts. Network access is needed only to open links and for review threads (User Story 10), which go through the GitHub CLI.
+- GitHub is the first forge. GitLab comes later as a second adapter behind the same interface (FR-067).
 - The proj-nava conventions (extra artifacts `review.md` and `deployment.md`, ticket-number folders, `feature.json`, session-labelled clarifications) are the primary target. Upstream Spec Kit templates must also work, since they are a subset.
 - One person uses the app. No accounts, sync, or sharing in v1.
-- Visual direction (2026-11-08): dark-first with a light variant; low-contrast layered surfaces; one violet accent; a single gradient reserved for the feature currently being worked on; a small stage-colour stripe on each row and bar; hatching for idle or off time; a white primary button. Native macOS chrome and system type.
+- Visual direction (2026-11-08): dark-first with a light variant; low-contrast layered surfaces; one violet accent; a single gradient reserved for the feature currently being worked on; a small stage-colour stripe on each row and bar; hatching for idle or off time; a white primary button. Native window chrome and system type on each platform.
 
 ## Out of Scope (v1)
 
 - Editing any file, checking off tasks, or answering questions in the app.
+- Approving or requesting changes on a pull request (comment only; see Clarifications).
+- Commenting on specs whose branch is merged, notifications, merging, and creating pull requests from the app.
+- GitLab (planned as the second adapter).
 - Launching agent commands from the app (only copying them).
 - Reading specs from branches that are not checked out. Planned for v2: list `feature/*` and `plan/*` branches and read their `specs/` through git without checking out.
 - Requirement-level traceability (FR/SC to tasks), beyond counts.
-- Windows and Linux.
 - Team distribution (signing, notarization, auto-update).
 
 ## Clarifications
@@ -266,7 +307,7 @@ I see specs on a timeline, each bar running from its Created date to its merge (
 - Q: Who is the app for? → A: Just me for now. I may share it with the team if it proves useful.
 - Q: Read-only or interactive? → A: Read-only to begin.
 - Q: Which Spec Kit setup? → A: "Stock". In practice, proj-nava extends it (see Assumptions), and the app targets those extensions.
-- Q: Platform? → A: A standalone macOS app.
+- Q: Platform? → A: A standalone macOS app. Superseded later the same day: Linux first, then macOS, then Windows (see the review session below).
 
 - Q: Stage for specs without `tasks.md` whose Status says implemented? → A: Trust the Status line. In proj-nava this moves 9 specs to Done and 3 to Building (FR-010, FR-011).
 - Q: Findings across review passes? → A: Show the latest pass by default, with earlier passes available as an option (FR-040, FR-041).
@@ -278,3 +319,11 @@ I see specs on a timeline, each bar running from its Created date to its merge (
 - Q: How to turn "not fully planned or partially implemented" into views? → A: Split "Needs attention" in two. "Unfinished" covers the human's two cases (FR-056). "Waiting on me" covers things only a human can unblock (FR-055). In proj-nava today: Unfinished = 18 specs, Waiting on me = 2 (both Done specs whose latest review still has an unresolved HIGH finding or a FAIL).
 
 - Q: Confirm the split into "Waiting on me" and "Unfinished" (FR-055, FR-056), and should Done specs whose latest review still has a FAIL or open HIGH finding count as "Waiting on me"? → A: Yes to both.
+
+### Session 2026-11-08: Review on GitHub (proposed by agent, confirmed by human)
+
+- Q: Where does collaboration on a spec happen? → A: On the branch's GitHub pull request, as inline review comments. GitHub handles identity, threads, and permissions; the app has no backend. GitLab comes later as a second adapter (FR-067).
+- Q: Which readiness checks gate commenting? → A: The human's three (CLI installed, token valid, remote responds) plus three the agent added because comments attach to a commit: the branch has a PR, local `HEAD` matches the PR head, and the file has no uncommitted edits (FR-060).
+- Q: Offer Approve and Request changes? → A: No, comment only. In proj-nava the spec and its code share one PR (PR #217: 12 spec files, 109 code files), so approving from the app would approve unreviewed code (FR-063).
+- Q: A new spec or a story in this one? → A: A new user story in this spec (User Story 10).
+- Q: Platforms? → A: Linux first, then macOS, then Windows.

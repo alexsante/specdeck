@@ -1,6 +1,6 @@
 # Handoff: Spec Deck (working name)
 
-A read-only macOS app that opens a Spec Kit repo and shows a command center: where every spec stands, and for one spec its stage, tasks, user stories, review health, decisions, and documents.
+A desktop app (Linux first, then macOS, then Windows) that opens a Spec Kit repo and shows a command center: where every spec stands, and for one spec its stage, tasks, user stories, review health, decisions, and documents.
 
 This file carries the context of the brainstorm session held on 2026-11-08 on the Linux laptop. Read it before doing anything else.
 
@@ -12,6 +12,7 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 | Parser prototype | `prototype/extract.py`. Python reference implementation of every parsing rule. |
 | Tauri proof of concept | Branch `tauri-poc`: `crates/speckit-core` (Rust parser, identical output to the Python reference on all 104 proj-nava specs) and `app/` (Tauri 2 app). Built and tested on Linux (Omarchy) on 2026-11-08. See "Tauri proof of concept" below. |
 | Mockup | Clickable, built from real proj-nava data: https://claude.ai/artifact/Mg1G4gMX7QJQszRVJohze9 (private, in Alex's claude.ai account). Source: `prototype/template.html` + `prototype/build.py`. |
+| Review mockup (User Story 10) | https://claude.ai/artifact/SXCybz6EV8dutmHEuKLq18 (private). Source: `prototype/review.html` + `prototype/build_review.py`, filled with PR #217's `spec.md`; threads are sample data. Not yet in the app. |
 
 ## Resume on the Mac
 
@@ -31,7 +32,8 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 |---|---|
 | Personal tool first; may be shared with the team later | Keeps v1 free of signing, notarization, and settings. |
 | Read-only | The app and the coding agent must never write the same files. "Copy next command" bridges to the workflow. |
-| Mac first; built with Rust + Tauri (see Stack decision) | It is a tool kept open next to the agent. Tauri also runs on Linux, where it was built. |
+| Linux first, then macOS, then Windows; built with Rust + Tauri (see Stack decision) | Human decision, 2026-11-08. The app is built and tested on the Linux laptop today, and Tauri covers all three. |
+| Review comments go to the branch's GitHub PR (User Story 10) | No backend: GitHub holds identity, threads, permissions. All access through `gh`; GitLab later as a second adapter. Comment only, because spec and code share one PR. |
 | Stage is derived from artifacts, not the `**Status**:` line | The Status line goes stale (33 proj-nava specs say "Draft", most are finished). |
 | Exception: no `tasks.md` → trust the Status line | Human decision. Older specs have no tasks file but say "Implemented". The UI marks these stages with an asterisk. |
 | Review shows the latest pass by default; earlier passes selectable | `review.md` holds several gates in sequence (pre-implementation ANALYZE passes, then a post-implementation REVIEW). Old findings must not raise alarms. |
@@ -57,7 +59,7 @@ proj-nava (the reference repo) extends Spec Kit heavily. The spec's Edge Cases a
 
 ## Visual direction
 
-Dark-first with a light variant. Low-contrast layered surfaces, one violet accent, a single gradient reserved for the feature being worked on now, a small stage-colour stripe on rows and bars, hatching for idle or off time, a white primary button, native macOS chrome and system type. Inspired by a dark project-timeline dashboard shot Alex shared (not included here; describe-only).
+Dark-first with a light variant. Low-contrast layered surfaces, one violet accent, a single gradient reserved for the feature being worked on now, a small stage-colour stripe on rows and bars, hatching for idle or off time, a white primary button, native window chrome and system type on each platform. Inspired by a dark project-timeline dashboard shot Alex shared (not included here; describe-only).
 
 ## Stack decision (2026-11-08): Rust + Tauri, not SwiftUI
 
@@ -68,7 +70,7 @@ Chosen after weighing SwiftUI, Tauri, and GPUI (Zed's framework):
 - Markdown and Mermaid render natively in the web view (Mermaid was the gap for both SwiftUI and GPUI).
 - The Rust core crate can later back a CLI or terminal UI.
 
-Whether Linux is a supported target (not just a dev convenience) is still open; the spec's Assumptions still say Mac-only.
+Platform order (decided 2026-11-08): Linux first, then macOS, then Windows.
 
 ## Tauri proof of concept
 
