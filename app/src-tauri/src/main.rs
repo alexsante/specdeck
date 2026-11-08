@@ -33,7 +33,15 @@ fn load(repo: &Path) -> Result<Value, String> {
     let started = std::time::Instant::now();
     let p = speckit_core::read_project(repo).map_err(|e| e.to_string())?;
     eprintln!("[spec-deck] read {} features from {} in {:?}", p.features.len(), repo.display(), started.elapsed());
-    Ok(view::project(&p, repo))
+    let mut v = view::project(&p, repo);
+    // The GitHub repo, for branch links (none for other hosts).
+    let origin = std::process::Command::new("git").args(["remote", "get-url", "origin"]).current_dir(repo).output().ok();
+    let slug = origin.filter(|o| o.status.success()).and_then(|o| speckit_forge::local::github_slug(&String::from_utf8_lossy(&o.stdout)));
+    v["remote"] = match slug {
+        Some(s) => serde_json::json!({ "slug": s, "web": format!("https://github.com/{s}") }),
+        None => Value::Null,
+    };
+    Ok(v)
 }
 
 fn last_project_file(app: &AppHandle) -> Option<PathBuf> {
@@ -193,6 +201,21 @@ fn forget_recent(app: AppHandle, path: String) -> Vec<recent::Recent> {
         recent::forget(&f, &path);
     }
     recents(&app)
+}
+
+/// Anything to pull for the open project's branch? Read-only (`git ls-remote`, no fetch).
+#[tauri::command]
+async fn pull_status(app: AppHandle) -> Result<speckit_forge::pull::PullStatus, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        let repo = current_repo(&state)?;
+        let t = std::time::Instant::now();
+        let s = state.forge.pull_status(&repo);
+        eprintln!("[spec-deck] pull status {} in {:?}", s.state, t.elapsed());
+        Ok(s)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Is the GitHub CLI installed and signed in? For the welcome view.
@@ -373,6 +396,11 @@ fn main() {
         }
         return;
     }
+    if args.get(1).map(String::as_str) == Some("--dump-pull") && args.len() >= 3 {
+        let repo = std::fs::canonicalize(&args[2]).expect("repo path");
+        println!("{}", serde_json::to_string(&speckit_forge::github::GitHub::default().pull_status(&repo)).unwrap());
+        return;
+    }
     if args.get(1).map(String::as_str) == Some("--dump-review") && args.len() >= 4 {
         let repo = std::fs::canonicalize(&args[2]).expect("repo path");
         let st = speckit_forge::Forge::status(&speckit_forge::github::GitHub::default(), &repo, &args[3], args.get(4).map(String::as_str));
@@ -384,7 +412,7 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, read_doc, open_feature, open_path, open_url, copy_text,
+            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, pull_status, read_doc, open_feature, open_path, open_url, copy_text,
             review::review_status, review::review_counts, review::review_comment, review::review_submit,
             review::review_discard, review::review_reply, review::review_resolve, review::review_edit, review::review_delete
         ])

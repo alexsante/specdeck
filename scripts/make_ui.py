@@ -292,6 +292,35 @@ T.event.listen("tauri://drag-drop", e => {
   if (p) openProjectPath(p);
 });""" + s[end:]
 
+# ---------------------------------------------------------------- pull available: real checks
+start, end = s.index("// @pull-start"), s.index("// @pull-end") + len("// @pull-end")
+s = s[:start] + """let pullState = null, pullAt = 0, pullTimer = null;
+// Checked when a project opens, every 5 minutes, on window focus, and after changes on disk
+// (a pull rewrites HEAD), at most every 20 s.
+async function checkPull(force) {
+  if (!DATA) return;
+  const wait = force ? 0 : Math.max(0, 20000 - (Date.now() - pullAt));
+  clearTimeout(pullTimer);
+  pullTimer = setTimeout(async () => {
+    pullAt = Date.now();
+    const path = DATA.path;
+    try { const p = await invoke("pull_status"); if (DATA?.path === path) { pullState = p; render(); } } catch { /* offline: keep the last state */ }
+  }, wait);
+}
+setInterval(() => checkPull(false), 5 * 60 * 1000);
+addEventListener("focus", () => { if (Date.now() - pullAt > 60000) checkPull(false); });""" + s[end:]
+rep('''  RV.reset();
+  RV.loadCounts();
+  refreshRecents();''', '''  RV.reset();
+  RV.loadCounts();
+  refreshRecents();
+  pullState = null;
+  checkPull(true);''')
+rep('''  RV.invalidate();
+  render();''', '''  RV.invalidate();
+  checkPull(false);
+  render();''')
+
 # ---------------------------------------------------------------- review layer: real backend, shared code inlined
 start, end = s.index("// @rv-backend-start"), s.index("// @rv-backend-end") + len("// @rv-backend-end")
 s = s[:start] + """const RV = createReview({

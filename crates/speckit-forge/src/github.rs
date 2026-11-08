@@ -212,6 +212,27 @@ fn unreachable(err: &str, repo: &str) -> String {
     }
 }
 
+impl GitHub {
+    /// Anything to pull for the checked-out branch? Counts come from GitHub's compare API
+    /// when the new commits haven't been fetched. Read-only.
+    pub fn pull_status(&self, repo: &Path) -> crate::pull::PullStatus {
+        let r = self.runner.as_ref();
+        let slug = git(r, repo, &["remote", "get-url", "origin"]).as_deref().and_then(local::github_slug);
+        // GitHub knows the local HEAD only if it was pushed; else use the last-fetched upstream.
+        let tracking = git(r, repo, &["rev-parse", "@{u}"]);
+        crate::pull::pull_status(r, repo, |head, tip| {
+            let slug = slug.as_ref()?;
+            let jq = r#"[.ahead_by, ([.files[]?.filename | select(startswith("specs/"))] | length)] | @tsv"#;
+            let ask = |base: &str| -> Option<(usize, usize)> {
+                let o = self.gh(&["api", &format!("repos/{slug}/compare/{base}...{tip}"), "--jq", jq], None).ok().filter(|o| o.ok)?;
+                let mut it = o.stdout.split_whitespace().map(|n| n.parse::<usize>().ok());
+                Some((it.next()??, it.next()??))
+            };
+            ask(head).or_else(|| tracking.as_deref().filter(|t| *t != head).and_then(ask))
+        })
+    }
+}
+
 impl Forge for GitHub {
     fn ready(&self) -> Ready {
         if self.program().is_none() {

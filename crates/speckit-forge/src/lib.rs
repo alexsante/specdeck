@@ -6,6 +6,7 @@
 pub mod diff;
 pub mod github;
 pub mod local;
+pub mod pull;
 pub mod run;
 
 use serde::Serialize;

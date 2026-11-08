@@ -243,6 +243,8 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - **FR-056**: The app MUST offer an "Unfinished" view: in-flight specs that are not fully planned (Specified, Clarified, Planned) or not fully built (Tasked, Analyzed, Building), marked "Stalled" after 14 days without a commit unless all open tasks are deferred.
 - **FR-053**: The app MUST remember recently opened projects.
 - **FR-054**: The app SHOULD offer open in editor, reveal in the file manager, open ticket link, and copy next command.
+- **FR-059**: The spec view MUST show the feature branch as a link to the branch on the forge (when `origin` is on GitHub) with a button that copies the branch name.
+- **FR-068**: The app MUST show when the checked-out branch's upstream has commits the checkout doesn't have, with the commit count and how many `specs/` files they change when the forge can tell, and copy `git pull` on click. It MUST find this without writing to the repo: `git ls-remote`, never `git fetch` (FR-002). It checks on open, every 5 minutes, on window focus, and after changes on disk.
 
 **Review on GitHub**
 
@@ -332,3 +334,4 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 ### Session 2026-11-08: Start views (proposed by agent, confirmed by human)
 
 - Q: How should the app greet you without an open project, and while one loads? → A: A welcome view (recent projects with spec counts, branch and last opened; Open project with ⌘O / Ctrl+O; drop a folder; three facts including GitHub CLI sign-in status) and an opening splash shown only when reading takes over 150 ms. Recent projects (FR-053, User Story 8) live in the app's config folder, never in a project.
+- Q: Link the branch, and flag when a pull is needed? → A: Yes (human request). The branch links to GitHub with a copy button (FR-059). The pull badge (FR-068) uses `git ls-remote` because `git fetch` would write into `.git`; counts come from local history when the commits are already fetched, else from GitHub's compare API.
