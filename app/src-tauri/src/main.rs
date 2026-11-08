@@ -1,6 +1,7 @@
-// Spec Deck: a read-only command center for Spec Kit projects.
+// Spec Deck: a command center for Spec Kit projects.
 //
-// The app never writes to the project it opens. It reads the project with
+// The app never writes to the project it opens, with one exception you trigger yourself:
+// "Pull now" runs `git pull --ff-only` (see `git_pull`). It reads the project with
 // speckit-core, watches specs/ and .specify/ for changes, and pushes a fresh
 // model to the interface as a "project-updated" event.
 
@@ -27,6 +28,8 @@ pub struct AppState {
     forge: speckit_forge::github::GitHub,
     /// Review status per feature; cleared when files change on disk.
     review: Mutex<std::collections::HashMap<String, review::Cached>>,
+    /// A `git pull` is running (one at a time).
+    pulling: std::sync::atomic::AtomicBool,
 }
 
 fn load(repo: &Path) -> Result<Value, String> {
@@ -201,6 +204,27 @@ fn forget_recent(app: AppHandle, path: String) -> Vec<recent::Recent> {
         recent::forget(&f, &path);
     }
     recents(&app)
+}
+
+/// The app's one write to a repo, and only on a click: `git pull --ff-only` (FR-070).
+/// The file watcher then reloads the project as usual.
+#[tauri::command]
+async fn git_pull(app: AppHandle) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        let repo = current_repo(&state)?;
+        if state.pulling.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            return Err("A pull is already running.".into());
+        }
+        let runner = speckit_forge::run::Process { timeout: std::time::Duration::from_secs(120) };
+        let r = speckit_forge::pull::pull_ff(&runner, &repo);
+        state.pulling.store(false, std::sync::atomic::Ordering::SeqCst);
+        eprintln!("[spec-deck] git pull in {}: {r:?}", repo.display());
+        state.review.lock().unwrap().clear();
+        r
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Text size and title bar theme for the window (the page sets its own colours and fonts).
@@ -425,7 +449,7 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, pull_status, set_appearance, read_doc, open_feature, open_path, open_url, copy_text,
+            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, pull_status, git_pull, set_appearance, read_doc, open_feature, open_path, open_url, copy_text,
             review::review_status, review::review_counts, review::review_comment, review::review_submit,
             review::review_discard, review::review_reply, review::review_resolve, review::review_edit, review::review_delete
         ])

@@ -7,4 +7,4 @@ Read `HANDOFF.md` first. It holds the decisions and context from the brainstorm 
 - The app is Rust + Tauri 2 (`app/`). Its interface `app/ui/index.html` is generated from the mockup `prototype/template.html` by `scripts/make_ui.py`: edit the template, never the generated file.
 - The review UI is `prototype/review-layer.js` + `.css`, inlined into both mockups and the app by the build scripts. Edit those files, not the copies.
 - Never commit proj-nava content (`prototype/data.json`, built mockup pages). They are git-ignored.
-- The app is read-only toward the repos it opens. Review comments (User Story 10) go to GitHub through `gh`, never to local files.
+- The app is read-only toward the repos it opens, except "Pull now" (`git pull --ff-only` on a click, refused while anything is uncommitted; FR-070). Review comments (User Story 10) go to GitHub through `gh`, never to local files. Don't add other writes without the human's go-ahead.

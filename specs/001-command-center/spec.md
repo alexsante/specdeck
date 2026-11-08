@@ -201,7 +201,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 **Reading**
 
 - **FR-001**: The app MUST open any local folder and recognise it as a Spec Kit project when it contains `specs/` or `.specify/`.
-- **FR-002**: The app MUST NOT write to, create, or delete anything in the project folder.
+- **FR-002**: The app MUST NOT write to, create, or delete anything in the project folder, with one exception: a `git pull --ff-only` that I start with a click (FR-070).
 - **FR-003**: The app MUST treat each direct subfolder of `specs/` as one feature. A leading number before the first `-` is the ticket; the rest is the slug.
 - **FR-004**: The app MUST read the spec header lines (`**Key**: value`) for title, status, feature branch, created date, input, and ClickUp link.
 - **FR-005**: The app MUST tolerate format variations and degrade gracefully. When it cannot parse a section, it MUST still show the raw rendered document.
@@ -244,6 +244,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - **FR-053**: The app MUST remember recently opened projects.
 - **FR-054**: The app SHOULD offer open in editor, reveal in the file manager, open ticket link, and copy next command.
 - **FR-059**: The spec view MUST show the feature branch as a link to the branch on the forge (when `origin` is on GitHub) with a button that copies the branch name.
+- **FR-070**: From the pull badge (FR-068), the app MUST offer "Pull now", which runs `git pull --ff-only` from the branch's upstream. It MUST refuse, with a one-line reason, when anything tracked is uncommitted, a merge or rebase is in progress, the branch has diverged, or git needs credentials it can't get without a prompt. It MUST never run on its own, merge, or rebase. The watcher then reloads the project.
 - **FR-069**: The app MUST let me choose the theme (Dark, the default; Light; Match system), the interface font and the code font (curated choices shown in their own typeface, unavailable ones disabled, or any installed font by name), and the text size (80% to 140%, scaling the whole window). Choices apply live, persist across launches, and apply before the first paint.
 - **FR-068**: The app MUST show when the checked-out branch's upstream has commits the checkout doesn't have, with the commit count and how many `specs/` files they change when the forge can tell, and copy `git pull` on click. It MUST find this without writing to the repo: `git ls-remote`, never `git fetch` (FR-002). It checks on open, every 5 minutes, on window focus, and after changes on disk.
 
@@ -337,3 +338,4 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - Q: How should the app greet you without an open project, and while one loads? → A: A welcome view (recent projects with spec counts, branch and last opened; Open project with ⌘O / Ctrl+O; drop a folder; three facts including GitHub CLI sign-in status) and an opening splash shown only when reading takes over 150 ms. Recent projects (FR-053, User Story 8) live in the app's config folder, never in a project.
 - Q: Link the branch, and flag when a pull is needed? → A: Yes (human request). The branch links to GitHub with a copy button (FR-059). The pull badge (FR-068) uses `git ls-remote` because `git fetch` would write into `.git`; counts come from local history when the commits are already fetched, else from GitHub's compare API.
 - Q: Let me change fonts, text size, and light or dark mode? → A: Yes (human request; default Dark). An Appearance panel (sidebar, welcome view, ⌘, / Ctrl+,) with theme, interface and code fonts, and text size (FR-069). Text size scales the whole window, like browser zoom, because the stylesheet uses fixed pixel sizes; ⌘+ ⌘− ⌘0 step it.
+- Q: Let the app run `git pull` instead of copying the command? → A: Yes (human request, 2026-11-08). This relaxes the read-only rule for one explicit action (FR-002, FR-070). Guardrails, proposed by the agent: fast-forward only, refused while anything is uncommitted or a merge or rebase is in progress (so a coding agent's work in progress is never touched), no credential prompts, always a click.

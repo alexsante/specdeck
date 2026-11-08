@@ -318,6 +318,8 @@ async function checkPull(force) {
     try { const p = await invoke("pull_status"); if (DATA?.path === path) { pullState = p; render(); } } catch { /* offline: keep the last state */ }
   }, wait);
 }
+// "Pull now": the app's one write (git pull --ff-only). The watcher reloads the project after.
+async function runGitPull() { const msg = await invoke("git_pull"); checkPull(true); return msg; }
 setInterval(() => checkPull(false), 5 * 60 * 1000);
 addEventListener("focus", () => { if (Date.now() - pullAt > 60000) checkPull(false); });""" + s[end:]
 rep('''  RV.reset();
