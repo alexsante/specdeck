@@ -125,7 +125,7 @@ function loadMermaid() {
     const sc = document.createElement("script");
     sc.src = "vendor/mermaid-12.2.0.min.js";
     sc.onload = () => {
-      const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = isDark();
       mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: dark ? "dark" : "default" });
       ok(window.mermaid);
     };
@@ -291,6 +291,17 @@ T.event.listen("tauri://drag-drop", e => {
   const p = e.payload?.paths?.[0];
   if (p) openProjectPath(p);
 });""" + s[end:]
+
+# ---------------------------------------------------------------- appearance: the window's own zoom and title bar
+start, end = s.index("// @zoom-start"), s.index("// @zoom-end") + len("// @zoom-end")
+s = s[:start] + """function setZoom(z, theme) { invoke("set_appearance", { zoom: z, theme }).catch(e => console.warn("set_appearance", e)); }""" + s[end:]
+rep("async function loadDoc() {", """// A theme change re-renders documents so Mermaid diagrams pick up the new colours.
+appearanceHooks.push(() => {
+  docCache.clear();
+  if (window.mermaid) mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: isDark() ? "dark" : "default" });
+  if (DATA && state.view === "spec") render();
+});
+async function loadDoc() {""")
 
 # ---------------------------------------------------------------- pull available: real checks
 start, end = s.index("// @pull-start"), s.index("// @pull-end") + len("// @pull-end")

@@ -504,8 +504,67 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px s
 .ind i { position: absolute; top: 0; bottom: 0; left: -40%; width: 40%; border-radius: 2px; background: var(--accent); animation: slide 1.2s ease-in-out infinite; }
 @keyframes slide { to { left: 100%; } }
 @media (prefers-reduced-motion: reduce) { .splash .mark, .ind i { animation: none; } .ind i { left: 30%; } }
+
+/* ---------- appearance panel ---------- */
+.side-foot { margin-top: auto; padding-top: 6px; border-top: 1px solid var(--line); }
+.side-foot button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; padding: 6px 8px; border-radius: 6px; font-size: 12.5px; color: var(--dim); }
+.side-foot button:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--fg); }
+.side-foot svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.side-foot kbd { margin-left: auto; }
+.wl-foot .linkish { all: unset; cursor: pointer; color: var(--accent); }
+#prefsdlg .scrim { position: fixed; inset: 0; z-index: 60; background: rgb(0 0 0 / .35); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.prefs { width: min(600px, 100%); max-height: 100%; overflow-y: auto; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 24px 60px -20px var(--shadow); display: flex; flex-direction: column; }
+.prefs > header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.prefs > header h2 { margin: 0; font-size: 15px; }
+.prefs > header .x { all: unset; cursor: pointer; margin-left: auto; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--dim); font-size: 18px; }
+.prefs > header .x:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.prefs section { padding: 14px 18px; display: grid; gap: 10px; }
+.prefs section + section { border-top: 1px solid var(--line); }
+.prefs h3 { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
+.prefs h3 .hint { text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: auto; }
+.themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.themes button { all: unset; cursor: pointer; border: 1px solid var(--line); border-radius: 10px; padding: 8px; display: grid; gap: 7px; font-size: 12.5px; text-align: center; }
+.themes button:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+.themes button.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; font-weight: 600; }
+.swatch { height: 54px; border-radius: 6px; overflow: hidden; display: grid; grid-template-columns: 30% 1fr; border: 1px solid rgb(127 127 127 / .25); }
+.swatch i, .swatch b { display: block; }
+.swatch.dark i { background: #1c1c1f; } .swatch.dark b { background: #161618 linear-gradient(#8b7cf6, #8b7cf6) 10px 12px / 40% 5px no-repeat; }
+.swatch.light i { background: #f5f5f8; } .swatch.light b { background: #ffffff linear-gradient(#6a5ae0, #6a5ae0) 10px 12px / 40% 5px no-repeat; }
+.swatch.system { grid-template-columns: 1fr 1fr; }
+.swatch.system i { background: #161618 linear-gradient(#8b7cf6, #8b7cf6) 10px 12px / 50% 5px no-repeat; } .swatch.system b { background: #ffffff linear-gradient(#6a5ae0, #6a5ae0) 8px 12px / 50% 5px no-repeat; }
+.sizer { display: flex; align-items: center; gap: 10px; }
+.sizer .a1 { font-size: 11px; color: var(--dim); } .sizer .a2 { font-size: 17px; color: var(--dim); }
+.sizer input[type=range] { flex: 1; accent-color: var(--accent); min-width: 0; }
+.sizer output { width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.fonts { display: grid; gap: 4px; }
+.fonts label { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 7px 10px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
+.fonts label:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.fonts label.on { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.fonts label.off { cursor: not-allowed; opacity: .5; }
+.fonts input[type=radio] { margin: 0; accent-color: var(--accent); }
+.fonts .nm { font-size: 13px; font-weight: 600; }
+.fonts .ftag { font-size: 11px; color: var(--dim); white-space: nowrap; }
+.fonts .sample { grid-column: 2 / -1; font-size: 12.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fonts .custom { grid-column: 2 / -1; display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+.fonts .custom input { flex: 1; min-width: 0; font: inherit; font-size: 12.5px; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; }
+.fonts .custom .warn { color: var(--warn); font-size: 11.5px; }
+.prefs > footer { display: flex; gap: 8px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--line); position: sticky; bottom: 0; background: var(--surface); }
+.prefs > footer .sp { flex: 1; }
+@container (max-width: 520px) { .themes { grid-template-columns: 1fr; } }
 /*__RVCSS__*/
 </style>
+<script>
+// Appearance, applied before the first paint so there is no flash of the wrong theme or font.
+// Dark is the default; "system" follows the OS. Kept in this window's local storage.
+(() => {
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem("specdeck.appearance") || "{}"); } catch {}
+  const r = document.documentElement, theme = p.theme || "dark";
+  if (theme !== "system") r.dataset.theme = theme;
+  if (p.sans) r.style.setProperty("--sans", p.sans);
+  if (p.mono) r.style.setProperty("--mono", p.mono);
+})();
+</script>
 </head>
 <body>
 <div class="win" id="win">
@@ -518,6 +577,7 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px s
 </div>
 <div id="modal" hidden></div>
 <div id="rvdialog"></div>
+<div id="prefsdlg"></div>
 <div class="toast" id="toast"></div>
 <script>/*__RVJS__*/</script>
 <script>/*__RVMOCK__*/</script>
@@ -655,6 +715,7 @@ function renderSide() {
     <div><h6>Views</h6><div class="nav">${navs.map(([k, l, n]) => `<button class="${state.nav === k && !state.stage && state.view === "project" ? "on" : ""}" data-nav="${k}">${icon(k)}${l}<span class="n">${k === "timeline" ? "" : n}</span></button>`).join("")}</div></div>
     <div><h6>Stages</h6><div class="nav">${[...STAGES].map(stageBtn).join("")}${stageBtn("Fragment")}</div></div>
     ${cur ? `<div><h6>Now working on</h6><div class="nav"><button data-open="${esc(cur.id)}" class="${state.spec === cur.id && state.view === "spec" ? "on" : ""}"><span class="pulse"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cur.ticket)} ${esc(cur.slug)}</span></button></div></div>` : ""}
+    <div class="side-foot"><button data-prefs title="Theme, fonts and text size"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>Appearance<kbd>${IS_MAC ? "⌘," : "Ctrl+,"}</kbd></button></div>
   `;
 }
 function compactNav() {
@@ -962,6 +1023,128 @@ function pullBadge() {
   return p?.state === "behind" ? `<span class="pullbadge" title="${esc(pullText(p).long)}">↓${p.behind ?? ""}</span>` : "";
 }
 
+// ---------- appearance: theme, fonts, text size (FR-069) ----------
+// Stacks fall back to the system font when a family isn't installed. "probe" lists the named
+// families that make an option available (none: always available).
+const FONT_CHOICES = {
+  sans: [
+    { id: "system", name: "System", tag: "SF Pro on Mac", stack: "" },
+    { id: "inter", name: "Inter", stack: '"Inter", "Inter Variable", system-ui, sans-serif', probe: ["Inter", "Inter Variable"] },
+    { id: "humanist", name: "Humanist", tag: "Avenir Next, Segoe UI, Ubuntu", stack: '"Avenir Next", "Segoe UI", "Ubuntu", "Cantarell", "Noto Sans", system-ui, sans-serif', probe: ["Avenir Next", "Segoe UI", "Ubuntu", "Cantarell", "Noto Sans"] },
+    { id: "rounded", name: "Rounded", tag: "SF Pro Rounded, Nunito", stack: 'ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif', probe: ["ui-rounded", "SF Pro Rounded", "Nunito"] },
+    { id: "plex", name: "IBM Plex Sans", stack: '"IBM Plex Sans", system-ui, sans-serif', probe: ["IBM Plex Sans"] },
+    { id: "serif", name: "Serif", tag: "New York, Charter, Georgia", stack: 'ui-serif, "New York", "Iowan Old Style", Charter, Georgia, serif' },
+    { id: "custom", name: "Custom", stack: null },
+  ],
+  mono: [
+    { id: "system", name: "System mono", tag: "SF Mono on Mac", stack: "" },
+    { id: "jetbrains", name: "JetBrains Mono", stack: '"JetBrains Mono", ui-monospace, monospace', probe: ["JetBrains Mono"] },
+    { id: "fira", name: "Fira Code", stack: '"Fira Code", ui-monospace, monospace', probe: ["Fira Code"] },
+    { id: "cascadia", name: "Cascadia Code", stack: '"Cascadia Code", ui-monospace, monospace', probe: ["Cascadia Code"] },
+    { id: "plexmono", name: "IBM Plex Mono", stack: '"IBM Plex Mono", ui-monospace, monospace', probe: ["IBM Plex Mono"] },
+    { id: "custom", name: "Custom", stack: null },
+  ],
+};
+const SYS_SANS = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif', SYS_MONO = '"SF Mono", ui-monospace, Menlo, Consolas, monospace';
+const FONT_SAMPLE = { sans: "Campaign budgeting · 34 of 38 tasks done · waiting on review", mono: "T034 [P] [US1] specs/27394-campaign-budgeting/tasks.md" };
+const PREF_DEFAULTS = { theme: "dark", sansId: "system", monoId: "system", sansCustom: "", monoCustom: "", zoom: 1 };
+let prefs = (() => { try { return { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem("specdeck.appearance") || "{}") }; } catch { return { ...PREF_DEFAULTS }; } })();
+let prefsOpen = false;
+const appearanceHooks = []; // the app re-themes Mermaid diagrams here
+
+// Is a font family installed? Compare its text width with two generic fallbacks.
+const fontProbe = document.createElement("canvas").getContext("2d");
+function fontInstalled(name) {
+  const generic = /^ui-|^(serif|sans-serif|monospace|system-ui)$/.test(name), fam = generic ? name : `"${name.replace(/"/g, "")}"`;
+  const w = f => { fontProbe.font = `40px ${f}`; return fontProbe.measureText("mmmmmmmmmmlli 0O WQ@#").width; };
+  return ["monospace", "serif"].some(fb => w(`${fam}, ${fb}`) !== w(fb));
+}
+const available = c => !c.probe || c.probe.some(fontInstalled);
+function stackOf(kind) {
+  const c = FONT_CHOICES[kind].find(x => x.id === prefs[kind + "Id"]) || FONT_CHOICES[kind][0];
+  if (c.id === "custom") { const n = prefs[kind + "Custom"].trim().replace(/["\\]/g, ""); return n ? `"${n}", ${kind === "sans" ? "system-ui, sans-serif" : "ui-monospace, monospace"}` : ""; }
+  return c.stack;
+}
+const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+
+function applyAppearance() {
+  const r = document.documentElement;
+  if (prefs.theme === "system") delete r.dataset.theme; else r.dataset.theme = prefs.theme;
+  const sans = stackOf("sans"), mono = stackOf("mono");
+  sans ? r.style.setProperty("--sans", sans) : r.style.removeProperty("--sans");
+  mono ? r.style.setProperty("--mono", mono) : r.style.removeProperty("--mono");
+  prefs.zoom = Math.min(1.4, Math.max(0.8, Math.round(prefs.zoom * 20) / 20));
+  setZoom(prefs.zoom, prefs.theme);
+  try { localStorage.setItem("specdeck.appearance", JSON.stringify({ ...prefs, sans, mono })); } catch {}
+  appearanceHooks.forEach(h => h());
+}
+// @zoom-start (mockup: CSS zoom; scripts/make_ui.py swaps in the window's own zoom and title bar theme)
+function setZoom(z) { document.getElementById("win").style.zoom = z === 1 ? "" : z; }
+// @zoom-end
+
+function prefsHtml() {
+  const theme = [["dark", "Dark"], ["light", "Light"], ["system", "Match system"]];
+  const fontList = kind => FONT_CHOICES[kind].map(c => {
+    const on = prefs[kind + "Id"] === c.id, ok = available(c);
+    const custom = prefs[kind + "Custom"].trim(), stack = c.id === "custom" ? (custom ? `"${custom.replace(/["\\]/g, "")}"` : "inherit") : c.stack || (kind === "sans" ? SYS_SANS : SYS_MONO);
+    const missing = c.id === "custom" && custom && !fontInstalled(custom);
+    return `<label class="${on ? "on" : ""} ${ok ? "" : "off"}"><input type="radio" name="pf-${kind}" value="${c.id}" ${on ? "checked" : ""} ${ok ? "" : "disabled"} data-pref-font="${kind}">
+      <span class="nm" style="font-family:${esc(stack)}">${esc(c.name)}</span><span class="ftag">${ok ? esc(c.tag || "") : "Not installed"}</span>
+      ${c.id === "custom" ? (on ? `<span class="custom"><input id="pf-${kind}-custom" type="text" placeholder="Font name, for example ${kind === "sans" ? "Helvetica Neue" : "Menlo"}" value="${esc(custom)}" data-pref-custom="${kind}" spellcheck="false">${missing ? `<span class="warn">Not found on this computer</span>` : ""}</span>` : `<span class="sample">Any font installed on this computer</span>`)
+        : `<span class="sample" style="font-family:${esc(stack)}">${esc(FONT_SAMPLE[kind])}</span>`}</label>`;
+  }).join("");
+  const pct = Math.round(prefs.zoom * 100);
+  return `<div class="scrim" data-prefs-scrim><div class="prefs" role="dialog" aria-modal="true" aria-labelledby="pf-h">
+    <header><h2 id="pf-h">Appearance</h2><button class="x" data-prefs-close aria-label="Close">×</button></header>
+    <section><h3>Theme</h3><div class="themes">${theme.map(([k, l]) => `<button class="${prefs.theme === k ? "on" : ""}" data-pref-theme="${k}" aria-pressed="${prefs.theme === k}"><span class="swatch ${k}"><i></i><b></b></span>${l}</button>`).join("")}</div></section>
+    <section><h3>Text size<span class="hint">${IS_MAC ? "⌘− ⌘+ ⌘0" : "Ctrl+− Ctrl++ Ctrl+0"}</span></h3>
+      <div class="sizer"><span class="a1" aria-hidden="true">A</span><input id="pf-zoom" type="range" min="80" max="140" step="5" value="${pct}" aria-label="Text size" data-pref-zoom><span class="a2" aria-hidden="true">A</span><output for="pf-zoom">${pct}%</output></div>
+      <span class="dim" style="font-size:11.5px">Scales the whole window, spacing included, so layouts keep their proportions.</span></section>
+    <section><h3>Interface font</h3><div class="fonts">${fontList("sans")}</div></section>
+    <section><h3>Code font<span class="hint">task IDs, paths, code blocks</span></h3><div class="fonts">${fontList("mono")}</div></section>
+    <footer><button class="btn" data-prefs-reset>Reset to defaults</button><span class="sp"></span><button class="btn primary" data-prefs-close>Done</button></footer>
+  </div></div>`;
+}
+function drawPrefs() {
+  const host = document.getElementById("prefsdlg");
+  const focused = document.activeElement?.id;
+  host.innerHTML = prefsOpen ? prefsHtml() : "";
+  if (focused && prefsOpen) { const el = document.getElementById(focused); if (el) { el.focus(); if (el.setSelectionRange && el.type === "text") el.setSelectionRange(el.value.length, el.value.length); } }
+}
+function openPrefs() { prefsOpen = true; drawPrefs(); document.querySelector(".prefs .themes .on")?.focus(); }
+function closePrefs() { prefsOpen = false; drawPrefs(); }
+function setPref(k, v) { prefs[k] = v; applyAppearance(); drawPrefs(); }
+function stepZoom(d) { prefs.zoom = d === 0 ? 1 : prefs.zoom + d * 0.05; applyAppearance(); if (prefsOpen) drawPrefs(); toast(`Text size ${Math.round(prefs.zoom * 100)}%`); }
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-prefs],[data-prefs-close],[data-prefs-reset],[data-pref-theme],[data-prefs-scrim]");
+  if (!el) return;
+  const d = el.dataset;
+  if ("prefsScrim" in d) { if (e.target === el) closePrefs(); return; }
+  if ("prefs" in d) return openPrefs();
+  if ("prefsClose" in d) return closePrefs();
+  if ("prefsReset" in d) { prefs = { ...PREF_DEFAULTS }; applyAppearance(); drawPrefs(); return; }
+  if (d.prefTheme) return setPref("theme", d.prefTheme);
+});
+document.addEventListener("change", e => {
+  const d = e.target.dataset || {};
+  if (d.prefFont) setPref(d.prefFont + "Id", e.target.value);
+});
+document.addEventListener("input", e => {
+  const d = e.target.dataset || {};
+  if ("prefZoom" in d) { prefs.zoom = +e.target.value / 100; applyAppearance(); e.target.nextElementSibling.nextElementSibling.textContent = e.target.value + "%"; }
+  if (d.prefCustom) { prefs[d.prefCustom + "Custom"] = e.target.value; applyAppearance(); clearTimeout(drawPrefs.t); drawPrefs.t = setTimeout(drawPrefs, 400); }
+});
+document.addEventListener("keydown", e => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key === ",") { e.preventDefault(); prefsOpen ? closePrefs() : openPrefs(); }
+  else if (mod && (e.key === "=" || e.key === "+")) { e.preventDefault(); stepZoom(1); }
+  else if (mod && e.key === "-") { e.preventDefault(); stepZoom(-1); }
+  else if (mod && e.key === "0") { e.preventDefault(); stepZoom(0); }
+  else if (e.key === "Escape" && prefsOpen) { e.stopImmediatePropagation(); closePrefs(); }
+}, true);
+applyAppearance();
+
 // ---------- welcome view and opening splash ----------
 const IS_MAC = /Mac/.test(navigator.platform || navigator.userAgent);
 const KEY_OPEN = IS_MAC ? "⌘O" : "Ctrl+O";
@@ -1019,7 +1202,7 @@ function welcomeHtml() {
     <div><div class="card panel recent"><header>Recent projects<span class="r">${recents.length || ""}</span></header>
         ${recents.length ? recents.map(recentHtml).join("") : `<div class="none-msg">Projects you open show up here.</div>`}</div>
       <div class="drop" id="drop">Or drop a project folder anywhere in this window.</div></div>
-    <div class="wl-foot"><span>Spec Deck 0.1.0</span><span>Works with stock Spec Kit and with repos that extend it.</span></div>
+    <div class="wl-foot"><span>Spec Deck 0.1.0 · <button class="linkish" data-prefs>Appearance</button> <kbd>${IS_MAC ? "⌘," : "Ctrl+,"}</kbd></span><span>Works with stock Spec Kit and with repos that extend it.</span></div>
   </div></div>`;
 }
 function splashHtml() {
