@@ -9,9 +9,9 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 | Item | State |
 |---|---|
 | Spec | `specs/001-command-center/spec.md`. Status: **Clarified**, no open questions. Ready for `/speckit-plan`. |
-| Parser prototype | `prototype/extract.py`. Python reference implementation of every parsing rule. The Swift parser should port it and match its output. |
+| Parser prototype | `prototype/extract.py`. Python reference implementation of every parsing rule. |
+| Tauri proof of concept | Branch `tauri-poc`: `crates/speckit-core` (Rust parser, identical output to the Python reference on all 104 proj-nava specs) and `app/` (Tauri 2 app). Built and tested on Linux (Omarchy) on 2026-11-08. See "Tauri proof of concept" below. |
 | Mockup | Clickable, built from real proj-nava data: https://claude.ai/artifact/Mg1G4gMX7QJQszRVJohze9 (private, in Alex's claude.ai account). Source: `prototype/template.html` + `prototype/build.py`. |
-| Swift code | None yet. |
 
 ## Resume on the Mac
 
@@ -31,7 +31,7 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 |---|---|
 | Personal tool first; may be shared with the team later | Keeps v1 free of signing, notarization, and settings. |
 | Read-only | The app and the coding agent must never write the same files. "Copy next command" bridges to the workflow. |
-| Mac only, native | It is a tool kept open next to the agent. |
+| Mac first; built with Rust + Tauri (see Stack decision) | It is a tool kept open next to the agent. Tauri also runs on Linux, where it was built. |
 | Stage is derived from artifacts, not the `**Status**:` line | The Status line goes stale (33 proj-nava specs say "Draft", most are finished). |
 | Exception: no `tasks.md` → trust the Status line | Human decision. Older specs have no tasks file but say "Implemented". The UI marks these stages with an asterisk. |
 | Review shows the latest pass by default; earlier passes selectable | `review.md` holds several gates in sequence (pre-implementation ANALYZE passes, then a post-implementation REVIEW). Old findings must not raise alarms. |
@@ -59,8 +59,48 @@ proj-nava (the reference repo) extends Spec Kit heavily. The spec's Edge Cases a
 
 Dark-first with a light variant. Low-contrast layered surfaces, one violet accent, a single gradient reserved for the feature being worked on now, a small stage-colour stripe on rows and bars, hatching for idle or off time, a white primary button, native macOS chrome and system type. Inspired by a dark project-timeline dashboard shot Alex shared (not included here; describe-only).
 
-## Suggested plan shape (input for `/speckit-plan`, not decided)
+## Stack decision (2026-11-08): Rust + Tauri, not SwiftUI
 
-- `SpecKitCore`: a Swift package with no UI. Parsers (spec, tasks, review, checklists), the stage and attention rules, git reads (shell out to `git`, off the main thread), and an FSEvents watcher with debounce. Fixture tests built from trimmed proj-nava folders.
-- `SpecDeck.app`: SwiftUI `NavigationSplitView` (projects, then views or specs, then detail). Markdown and Mermaid documents render in a `WKWebView`.
-- Keep the last good parse when a file is mid-write (User Story 3).
+Chosen after weighing SwiftUI, Tauri, and GPUI (Zed's framework):
+
+- Tauri runs on macOS and Linux, so it can be built and tested on the Linux laptop too.
+- The mockup's HTML/CSS/JS became the app's interface with little change.
+- Markdown and Mermaid render natively in the web view (Mermaid was the gap for both SwiftUI and GPUI).
+- The Rust core crate can later back a CLI or terminal UI.
+
+Whether Linux is a supported target (not just a dev convenience) is still open; the spec's Assumptions still say Mac-only.
+
+## Tauri proof of concept
+
+Layout:
+
+```
+Cargo.toml                  workspace
+crates/speckit-core/        parser + model (port of prototype/extract.py), `speckit-dump` CLI
+app/src-tauri/              Tauri 2 app: commands, file watcher, markdown rendering (comrak)
+app/ui/index.html           interface (derived from prototype/template.html, then edited directly)
+app/ui/vendor/              Mermaid 12.2.0, bundled for offline use
+scripts/parity.py           diff the Rust and Python parser output
+```
+
+Run it:
+
+```sh
+cargo run -p spec-deck -- ~/path/to/proj-nava          # or launch without a path and use "Open project…"
+cargo run -p spec-deck -- --dump-view ~/path/to/repo    # print the JSON the interface receives
+cargo test -p speckit-core
+python3 -I prototype/extract.py REPO /tmp/py.json \
+  && cargo run -q -p speckit-core --bin speckit-dump REPO /tmp/rs.json \
+  && python3 -I scripts/parity.py /tmp/py.json /tmp/rs.json
+```
+
+The first build compiles all dependencies (about 10 minutes); later builds take seconds. On macOS: install Rust with rustup, then the same commands. To make a `.app`/`.dmg`: `cargo install tauri-cli`, `cargo tauri icon app/src-tauri/icons/icon.png`, `cargo tauri build`.
+
+What the proof of concept proves:
+
+- Parser parity: Rust output identical to the Python reference for all 104 proj-nava features; 1.4 s for the whole repo (mostly git).
+- Interface to Rust calls, folder picker, remembered last project, links opening in the browser, clipboard.
+- Live reload: editing a `tasks.md` pushes a new model about 120 ms later. On Linux, file *reads* also raise watch events; they are filtered out, or every reload would trigger another.
+- Documents rendered by comrak, Mermaid drawn in the web view.
+
+Known gaps: no recent-projects list yet (only the last one); no specs from other branches (v2); the window title does not follow the view; git dates are re-read on every reload (could be cached until `.git/logs/HEAD` changes); unsigned and unbundled. The interface was checked in headless Chromium with the real data and on the live app through its logs; it has not yet been looked at on screen in WebKitGTK.

@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = ["crates/speckit-core", "app/src-tauri"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "UNLICENSED"
+
+# Dependencies (regex especially) are slow unoptimized; optimize them even in dev builds.
+[profile.dev.package."*"]
+opt-level = 3

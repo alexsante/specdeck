@@ -1,0 +1,12 @@
+[package]
+name = "speckit-core"
+description = "Reads a Spec Kit repository into a typed model: specs, tasks, reviews, decisions, stages."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }

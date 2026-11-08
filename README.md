@@ -2,7 +2,13 @@
 
 A read-only macOS command center for projects that use [Spec Kit](https://github.com/github/spec-kit): see where every spec stands, then open one to see its stage, tasks, user stories, review health, decisions, and documents in one place.
 
-Status: specified, not yet built. See `HANDOFF.md` and `specs/001-command-center/spec.md`.
+Status: specified; a Rust + Tauri proof of concept runs on Linux (branch `tauri-poc`). See `HANDOFF.md` and `specs/001-command-center/spec.md`.
+
+## Run the proof of concept
+
+```sh
+cargo run -p spec-deck -- /path/to/spec-kit-repo
+```
 
 ## Prototype
 
