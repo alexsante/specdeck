@@ -226,7 +226,8 @@ function createReview(cfg) {
       const el = document.getElementById("rvt-" + st.jump);
       if (el) {
         st.jump = null;
-        el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        // Next frame: the page restores its scroll position after a redraw, which would undo this.
+        requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
         el.classList.add("rv-flash");
       }
     }

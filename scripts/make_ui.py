@@ -100,7 +100,7 @@ end = s.index("\n", s.index("contract files", start))
 s = s[:start] + (
     '  const docKey = `${f.id}/${state.docTab}`;\n'
     '  const docBody = `<div class="doc" id="doc" data-feature="${esc(f.id)}" data-file="${esc(state.docTab)}">'
-    '${docCache.get(docKey) ?? `<div class="dim">Loading ${esc(state.docTab)}…</div>`}</div>`;'
+    '${docCache.get(docKey) ?? `<div class="dim doc-loading">Loading ${esc(state.docTab)}…</div>`}</div>`;'
 ) + s[end:]
 rep('function openPath(p) { toast(`Opens <code>${esc(p)}</code> in your editor (mockup)`); }',
     'function openPath(p) { invoke("open_path", { path: p }).catch(err => toast(esc(err))); }')
@@ -145,6 +145,7 @@ async function loadDoc() {
   const now = document.getElementById("doc");
   if (!now || now.dataset.feature !== feature || now.dataset.file !== file) return; // the view moved on
   now.innerHTML = html;
+  now.style.minHeight = ""; // held at the previous document's height while loading
   const blocks = [...now.querySelectorAll("pre > code.language-mermaid")];
   if (blocks.length) {
     try {
