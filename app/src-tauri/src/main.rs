@@ -6,6 +6,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod recent;
 mod review;
 mod view;
 
@@ -39,6 +40,23 @@ fn last_project_file(app: &AppHandle) -> Option<PathBuf> {
     app.path().app_config_dir().ok().map(|d| d.join("last-project.txt"))
 }
 
+fn recents_file(app: &AppHandle) -> Option<PathBuf> {
+    app.path().app_config_dir().ok().map(|d| d.join("recent-projects.json"))
+}
+
+/// Recent projects, newest first. The old single last-project file seeds the list once.
+fn recents(app: &AppHandle) -> Vec<recent::Recent> {
+    let Some(file) = recents_file(app) else { return vec![] };
+    if !file.exists() {
+        if let Some(p) = last_project_file(app).and_then(|f| std::fs::read_to_string(f).ok()) {
+            let p = PathBuf::from(p.trim());
+            let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+            recent::touch(&file, &p, &serde_json::json!({ "project": name }));
+        }
+    }
+    recent::list(&file)
+}
+
 /// Make `repo` the open project: read it, remember it, and watch it.
 fn open_repo(app: &AppHandle, repo: PathBuf) -> Result<Value, String> {
     let repo = std::fs::canonicalize(&repo).map_err(|e| format!("{}: {e}", repo.display()))?;
@@ -46,9 +64,8 @@ fn open_repo(app: &AppHandle, repo: PathBuf) -> Result<Value, String> {
     let state = app.state::<AppState>();
     *state.repo.lock().unwrap() = Some(repo.clone());
     state.review.lock().unwrap().clear();
-    if let Some(f) = last_project_file(app) {
-        let _ = std::fs::create_dir_all(f.parent().unwrap());
-        let _ = std::fs::write(f, repo.display().to_string());
+    if let Some(f) = recents_file(app) {
+        recent::touch(&f, &repo, &data);
     }
 
     // Watch for changes. Reads are ignored: on Linux the watcher also reports
@@ -108,31 +125,80 @@ fn current_repo(state: &AppState) -> Result<PathBuf, String> {
     state.repo.lock().unwrap().clone().ok_or_else(|| "No project is open.".into())
 }
 
-/// The project to show at launch: a path given on the command line, else the last one opened.
+/// The project to open at launch: a path given on the command line, else the most recent one.
+fn launch_path(app: &AppHandle) -> Option<PathBuf> {
+    std::env::args().nth(1).filter(|a| !a.starts_with("--")).map(PathBuf::from).or_else(|| recents(app).into_iter().find(|r| r.ok).map(|r| PathBuf::from(r.path)))
+}
+
+/// What the splash should name while the launch project loads, without reading it yet.
 #[tauri::command]
-fn current_project(app: AppHandle, state: State<AppState>) -> Result<Option<Value>, String> {
+fn launch_target(app: AppHandle, state: State<AppState>) -> Option<recent::Recent> {
+    let p = state.repo.lock().unwrap().clone().or_else(|| launch_path(&app))?;
+    let path = std::fs::canonicalize(&p).unwrap_or(p).display().to_string();
+    let known = recents(&app).into_iter().find(|r| r.path == path);
+    Some(known.unwrap_or_else(|| recent::Recent {
+        name: Path::new(&path).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
+        display: recent::display(&path),
+        path,
+        ok: true,
+        ..Default::default()
+    }))
+}
+
+/// The project to show at launch (see `launch_path`); None shows the welcome view.
+#[tauri::command]
+async fn current_project(app: AppHandle) -> Result<Option<Value>, String> {
     eprintln!("[spec-deck] interface asked for the current project");
-    if let Some(repo) = state.repo.lock().unwrap().clone() {
-        return load(&repo).map(Some);
-    }
-    let arg = std::env::args().nth(1).map(PathBuf::from);
-    let last = last_project_file(&app).and_then(|f| std::fs::read_to_string(f).ok()).map(|s| PathBuf::from(s.trim()));
-    match arg.or(last) {
-        Some(p) if p.join("specs").is_dir() => open_repo(&app, p).map(Some),
-        _ => Ok(None),
-    }
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Some(repo) = app.state::<AppState>().repo.lock().unwrap().clone() {
+            return load(&repo).map(Some);
+        }
+        match launch_path(&app) {
+            Some(p) if p.join("specs").is_dir() => open_repo(&app, p).map(Some),
+            _ => Ok(None),
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-async fn pick_project(app: AppHandle) -> Result<Option<Value>, String> {
-    let Some(folder) = app.dialog().file().set_title("Open a Spec Kit project").blocking_pick_folder() else {
-        return Ok(None); // cancelled
-    };
-    let path = folder.into_path().map_err(|e| e.to_string())?;
-    if !path.join("specs").is_dir() {
-        return Err(format!("{} has no specs/ folder. Pick the root of a Spec Kit project.", path.display()));
+async fn pick_folder(app: AppHandle) -> Option<String> {
+    let folder = app.dialog().file().set_title("Open a Spec Kit project").blocking_pick_folder()?;
+    folder.into_path().ok().map(|p| p.display().to_string())
+}
+
+/// Open a folder picked, dropped, or chosen from the recent list.
+#[tauri::command]
+async fn open_project_path(app: AppHandle, path: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let p = PathBuf::from(&path);
+        if !p.join("specs").is_dir() {
+            return Err(format!("{} has no specs/ folder. Pick the root of a Spec Kit project.", recent::display(&path)));
+        }
+        open_repo(&app, p)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn recent_projects(app: AppHandle) -> Vec<recent::Recent> {
+    recents(&app)
+}
+
+#[tauri::command]
+fn forget_recent(app: AppHandle, path: String) -> Vec<recent::Recent> {
+    if let Some(f) = recents_file(&app) {
+        recent::forget(&f, &path);
     }
-    open_repo(&app, path).map(Some)
+    recents(&app)
+}
+
+/// Is the GitHub CLI installed and signed in? For the welcome view.
+#[tauri::command]
+async fn gh_ready(app: AppHandle) -> Result<speckit_forge::Ready, String> {
+    tauri::async_runtime::spawn_blocking(move || speckit_forge::Forge::ready(&app.state::<AppState>().forge)).await.map_err(|e| e.to_string())
 }
 
 /// Resolve `specs/<feature>/<file>` and refuse anything outside specs/.
@@ -318,7 +384,7 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            current_project, pick_project, read_doc, open_feature, open_path, open_url, copy_text,
+            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, read_doc, open_feature, open_path, open_url, copy_text,
             review::review_status, review::review_counts, review::review_comment, review::review_submit,
             review::review_discard, review::review_reply, review::review_resolve, review::review_edit, review::review_delete
         ])

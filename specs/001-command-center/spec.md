@@ -328,3 +328,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - Q: A new spec or a story in this one? → A: A new user story in this spec (User Story 10).
 - Q: Platforms? → A: Linux first, then macOS, then Windows.
 - Q: Gate writes on local `HEAD` equal to the PR head plus a clean file? → A: Replaced during planning by one exact per-file check: the file on disk must match the PR head's blob. `HEAD` equality blocked comments when unrelated commits were unpushed and let uncommitted edits through. The message still names the cause (plan.md, Research decisions).
+
+### Session 2026-11-08: Start views (proposed by agent, confirmed by human)
+
+- Q: How should the app greet you without an open project, and while one loads? → A: A welcome view (recent projects with spec counts, branch and last opened; Open project with ⌘O / Ctrl+O; drop a folder; three facts including GitHub CLI sign-in status) and an opening splash shown only when reading takes over 150 ms. Recent projects (FR-053, User Story 8) live in the app's config folder, never in a project.

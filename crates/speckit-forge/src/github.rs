@@ -4,7 +4,7 @@
 use crate::diff;
 use crate::local::{self, git};
 use crate::run::{Output, Process, Runner};
-use crate::{ChangeRequest, Comment, FileState, Forge, Position, Status, Thread};
+use crate::{ChangeRequest, Comment, FileState, Forge, Position, Ready, Status, Thread};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -213,6 +213,19 @@ fn unreachable(err: &str, repo: &str) -> String {
 }
 
 impl Forge for GitHub {
+    fn ready(&self) -> Ready {
+        if self.program().is_none() {
+            return Ready { message: format!("The GitHub CLI isn't installed. Install it with {} to see review threads.", install_hint()), ..Default::default() };
+        }
+        match self.gh(&["auth", "token", "--hostname", "github.com"], None) {
+            Ok(o) if o.ok && !o.stdout.trim().is_empty() => {}
+            _ => return Ready { message: "The GitHub CLI isn't signed in. Run `gh auth login` to see review threads.".into(), ..Default::default() },
+        }
+        // The login needs the network; without it the CLI is still signed in.
+        let login = self.gh(&["api", "user", "--jq", ".login"], None).ok().filter(|o| o.ok).map(|o| o.stdout.trim().to_string()).filter(|l| !l.is_empty());
+        Ready { ok: true, login, message: String::new() }
+    }
+
     fn status(&self, repo: &Path, feature: &str, branch_hint: Option<&str>) -> Status {
         let mut s = Status { feature: feature.into(), ..Default::default() };
         let r = self.runner.as_ref();
@@ -507,6 +520,20 @@ mod tests {
             .on(&["status --porcelain"], true, "")
             // contracts/a.md, plan.md, spec.md (sorted)
             .on(&["hash-object"], true, "SA\nSP\nSS")
+    }
+
+    #[test]
+    fn ready_states() {
+        let f = Fake::default().missing("gh").on(&["-lc"], true, "").on(&["-ic"], true, "");
+        assert!(GitHub::new(Box::new(f)).ready().message.contains("isn't installed"));
+        let f = Fake::default().on(&["gh --version"], true, "gh").on(&["auth token"], false, "");
+        assert!(GitHub::new(Box::new(f)).ready().message.contains("gh auth login"));
+        let f = Fake::default().on(&["gh --version"], true, "gh").on(&["auth token"], true, "gho").on(&["api user"], true, "alex\n");
+        let r = GitHub::new(Box::new(f)).ready();
+        assert!(r.ok && r.login.as_deref() == Some("alex"));
+        let f = Fake::default().on(&["gh --version"], true, "gh").on(&["auth token"], true, "gho").on(&["api user"], false, "offline");
+        let r = GitHub::new(Box::new(f)).ready();
+        assert!(r.ok && r.login.is_none());
     }
 
     #[test]

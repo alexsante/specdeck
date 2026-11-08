@@ -66,14 +66,13 @@ body { padding: 0 !important; overflow: hidden; }
 .docfile-name { font-family: var(--mono); font-size: 11.5px; color: var(--dim); margin-bottom: 6px; }
 .doc h2.rv-blk > .rv-gut { top: 14px; }
 
-/* ---------- empty state ---------- */
-.empty-state { max-width: 460px; margin: 14vh auto 0; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-.empty-state h1 { margin: 6px 0 0; font-size: 22px; }
-.empty-state p { margin: 0; color: var(--dim); }
-.empty-state .err { color: var(--bad); }
-.empty-state .logo { width: 56px; height: 56px; border-radius: 14px; background: var(--grad); display: grid; place-items: center; }
-.empty-state .logo svg { width: 28px; height: 28px; stroke: #fff; stroke-width: 2.2; fill: none; stroke-linecap: round; }
+/* ---------- start views fill the window ---------- */
+.shell.bare > .main > .start { min-height: 0; }
 </style>""")
+
+rep('''  document.getElementById("wtitle").textContent = "Spec Deck";
+  document.getElementById("main").innerHTML = state.view === "splash"''', '''  document.title = "Spec Deck";
+  document.getElementById("main").innerHTML = state.view === "splash"''')
 
 # ---------------------------------------------------------------- data becomes runtime state
 rep("const DATA = /*__DATA__*/null;\nconst STAGES = DATA.stages; // Specified … Done",
@@ -108,26 +107,17 @@ rep('function openPath(p) { toast(`Opens <code>${esc(p)}</code> in your editor (
 
 # ---------------------------------------------------------------- render, documents, data, events
 rep('''function render() {
+  if (startView()) return;
   document.getElementById("wtitle").textContent = state.view === "spec" ? `${DATA.project} — ${byId[state.spec].id}` : `${DATA.project} — Spec Deck`;
   renderSide();
   state.view === "spec" ? renderSpec() : renderProject();''', '''function render() {
-  if (!DATA) return renderEmpty();
+  if (!DATA && state.view !== "splash" && state.view !== "boot") state.view = "welcome";
+  if (startView()) return;
   document.title = state.view === "spec" ? `${byId[state.spec].id} — ${DATA.project}` : `${DATA.project} — Spec Deck`;
   renderSide();
   state.view === "spec" ? renderSpec() : renderProject();
   if (state.view === "spec") loadDoc();''')
-rep("// ---------- detail modals ----------", '''function renderEmpty(message) {
-  document.title = "Spec Deck";
-  document.getElementById("side").innerHTML = `<div><h6>Projects</h6><button class="open" data-pick>+ Open project…</button></div>`;
-  document.getElementById("main").innerHTML = `<div class="empty-state">
-    <div class="logo"><svg viewBox="0 0 24 24"><path d="M5 7h9M8 12h11M6 17h7"/></svg></div>
-    <h1>Open a Spec Kit project</h1>
-    <p>Pick the folder that contains <span class="mono">specs/</span>. Spec Deck reads it and never writes to it.</p>
-    ${message ? `<p class="err">${esc(message)}</p>` : ""}
-    <button class="btn primary" data-pick>Open project…</button></div>`;
-}
-
-// ---------- documents (rendered by Rust; Mermaid drawn here) ----------
+rep("// ---------- detail modals ----------", '''// ---------- documents (rendered by Rust; Mermaid drawn here) ----------
 const docCache = new Map();
 let mermaidReady = null;
 function loadMermaid() {
@@ -186,23 +176,45 @@ function setData(d) {
   docCache.clear();
 }
 
-async function pickProject() {
+// Open a project folder: the splash shows if reading takes more than a moment.
+async function openProjectPath(path, target) {
+  const t = setTimeout(() => { splashFor = target || recents.find(r => r.path === path) || { name: path.split(/[\\/]/).pop(), path }; state.view = "splash"; render(); }, 150);
   try {
-    const d = await invoke("pick_project");
-    if (!d) return; // cancelled
-    setData(d);
-    RV.reset();
-    RV.loadCounts();
-    Object.assign(state, { stage: null, nav: "all", q: "", tlSel: null, tlCenter: true, modal: null });
-    if (location.hash) location.hash = ""; else route();
+    const d = await invoke("open_project_path", { path });
+    clearTimeout(t);
+    showProject(d);
   } catch (e) {
-    DATA ? toast(esc(e)) : renderEmpty(String(e));
+    clearTimeout(t);
+    if (DATA) { if (state.view === "splash") state.view = "project"; render(); toast(esc(e)); }
+    else { welcomeError = String(e); state.view = "welcome"; render(); }
   }
+}
+function showProject(d) {
+  setData(d);
+  RV.reset();
+  RV.loadCounts();
+  refreshRecents();
+  welcomeError = "";
+  Object.assign(state, { view: "project", stage: null, nav: "all", q: "", tlSel: null, tlCenter: true, modal: null });
+  if (location.hash) location.hash = ""; else route();
+}
+async function pickProject() {
+  let path;
+  try { path = await invoke("pick_folder"); } catch (e) { return toast(esc(e)); }
+  if (path) openProjectPath(path);
+}
+async function refreshRecents() {
+  try { recents = await invoke("recent_projects"); } catch { recents = []; }
+  render();
+}
+async function checkGitHub() {
+  try { ghReady = await invoke("gh_ready"); } catch (e) { ghReady = { ok: false, message: String(e) }; }
+  if (state.view === "welcome") render();
 }
 
 // ---------- detail modals ----------''')
 
-rep('const el = e.target.closest("', 'const el = e.target.closest("[data-pick],[data-folder],')
+rep('const el = e.target.closest("[data-openpath]', 'const el = e.target.closest("[data-pick],[data-folder],[data-openpath]')
 rep('''  const ds = el.dataset;
   if (ds.open) { location.hash = ds.open; return; }''', '''  const ds = el.dataset;
   if ("pick" in ds) return pickProject();
@@ -214,6 +226,7 @@ rep('''  else if (ds.copy) { const ok = () => toast(`Copied <code>${esc(ds.copy)
     return;
   }''')
 rep('document.getElementById("win").scrollIntoView({ block: "start" });', 'document.getElementById("main").scrollTop = 0;')
+rep("RV.loadCounts();\nroute();\n</script>", "route();\n</script>")  # counts load once a project is open
 rep("route();\n</script>", """// Web links open in the browser, not inside the app.
 document.addEventListener("click", e => {
   const a = e.target.closest("a[href]");
@@ -232,15 +245,51 @@ T.event.listen("project-updated", e => {
   toast("Updated from disk");
 });
 (async () => {
+  state.view = "boot";
+  refreshRecents();
+  checkGitHub();
+  let target = null;
+  try { target = await invoke("launch_target"); } catch {}
+  if (!target) { state.view = "welcome"; return render(); }
+  const t = setTimeout(() => { splashFor = target; state.view = "splash"; render(); }, 150);
   try {
     const d = await invoke("current_project");
-    if (d) { setData(d); RV.loadCounts(); }
+    clearTimeout(t);
+    if (d) return showProject(d);
   } catch (e) {
-    return renderEmpty(String(e));
+    clearTimeout(t);
+    welcomeError = String(e);
   }
-  route();
+  state.view = "welcome";
+  render();
 })();
 </script>""")
+
+# ---------------------------------------------------------------- start views: real recents, gh check, handlers
+start = s.index("// Recent projects: in the mockup")
+end = s.index("let splashFor = null")
+s = s[:start] + """// Recent projects come from the app's config folder (recent_projects); gh is checked once at launch.
+let recents = [];
+let ghReady = { ok: false, login: "", message: "" };
+""" + s[end:]
+start, end = s.index("// @start-handlers-start"), s.index("// @start-handlers-end") + len("// @start-handlers-end")
+s = s[:start] + """document.addEventListener("click", e => {
+  const el = e.target.closest("[data-recent],[data-forget]");
+  if (!el) return;
+  if (el.dataset.forget) { invoke("forget_recent", { path: el.dataset.forget }).then(r => { recents = r; render(); }); return; }
+  openProjectPath(el.dataset.recent);
+});
+document.addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "o") { e.preventDefault(); pickProject(); }
+});
+// Folders dropped on the window (Tauri gives real paths; the web view's own drop events don't).
+T.event.listen("tauri://drag-enter", () => document.getElementById("drop")?.classList.add("over"));
+T.event.listen("tauri://drag-leave", () => document.getElementById("drop")?.classList.remove("over"));
+T.event.listen("tauri://drag-drop", e => {
+  document.getElementById("drop")?.classList.remove("over");
+  const p = e.payload?.paths?.[0];
+  if (p) openProjectPath(p);
+});""" + s[end:]
 
 # ---------------------------------------------------------------- review layer: real backend, shared code inlined
 start, end = s.index("// @rv-backend-start"), s.index("// @rv-backend-end") + len("// @rv-backend-end")
@@ -269,6 +318,7 @@ rep("/*__RVJS__*/", read("review-layer.js"))
 
 assert "/*__DATA__*/" not in s
 assert "createMockBackend" not in s, "mockup sample data would reach the app"
+assert "archived-demo" not in s and "Opens the dropped folder" not in s, "mockup start-view samples would reach the app"
 assert 'data-toast="' not in s, "a mockup-only toast button would reach the app"
 open(out, "w", encoding="utf-8").write(s)
 print("wrote", out, len(s), "bytes")

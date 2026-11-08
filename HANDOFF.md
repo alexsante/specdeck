@@ -11,7 +11,7 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 | Spec | `specs/001-command-center/spec.md`. Status: **Clarified**, no open questions. Ready for `/speckit-plan`. |
 | Parser prototype | `prototype/extract.py`. Python reference implementation of every parsing rule. |
 | Tauri proof of concept | Branch `tauri-poc`: `crates/speckit-core` (Rust parser, identical output to the Python reference on all 104 proj-nava specs) and `app/` (Tauri 2 app). Built and tested on Linux (Omarchy) on 2026-11-08. See "Tauri proof of concept" below. |
-| Mockup | Clickable, built from real proj-nava data: https://claude.ai/artifact/Mg1G4gMX7QJQszRVJohze9 (private, in Alex's claude.ai account). Source: `prototype/template.html` + `prototype/build.py`. |
+| Mockup | Clickable, built from real proj-nava data: https://claude.ai/artifact/VmZz1PrgbQETZ37ViG4E9s (private; `#welcome` and `#splash` show the start views). The earlier link was lost. Source: `prototype/template.html` + `prototype/build.py`. |
 | Review mockup (User Story 10) | https://claude.ai/artifact/SXCybz6EV8dutmHEuKLq18 (private). Source: `prototype/review.html` + `prototype/build_review.py`, filled with PR #217's `spec.md`; threads are sample data. Not yet in the app. |
 
 ## Resume on the Mac
@@ -117,6 +117,7 @@ What the proof of concept proves:
 - Documents rendered by comrak, Mermaid drawn in the web view.
 - Timeline v2 (approved 2026-11-08): fixed label column, grouping by ticket or stage, true-length bars with tasks-done fill and idle hatching, lifecycle milestones (created, clarify sessions by who decided, analyze and review passes, merge), dependency arrows for the selected spec, lead-time summary.
 - Review on GitHub (User Story 10, plan and tasks in `specs/001-command-center/`): readiness checks, threads in place, comment on block line ranges, pending review submitted as Comment only, reply, resolve, Copy for agent, "Open review threads" view. Checked read-only against proj-nava PRs #217, #203, #171 and in headless Chromium; writes are unit-tested but not yet run against a real PR.
+- Welcome view and opening splash (approved 2026-11-08): recent projects kept in the app's config folder (`recent-projects.json`, max 8, missing folders marked with Remove), GitHub CLI sign-in status, Open project with ⌘O / Ctrl+O, folders dropped on the window, other recent projects in the sidebar. The splash appears only if reading takes over 150 ms.
 - Task and user-story detail modals: full task text, files (open with the default app), linked story, review findings that mention the task or story; story description, why-this-priority, independent test, Given/When/Then scenarios, tasks. Arrow keys step through, Esc closes.
 
-Known gaps: no recent-projects list yet (only the last one); no specs from other branches (v2); the window title does not follow the view; git dates are re-read on every reload (could be cached until `.git/logs/HEAD` changes); unsigned and unbundled. The interface was checked in headless Chromium with the real data and on the live app through its logs; it has not yet been looked at on screen in WebKitGTK.
+Known gaps: no specs from other branches (v2); the window title does not follow the view; git dates are re-read on every reload (could be cached until `.git/logs/HEAD` changes); unsigned and unbundled. The interface was checked in headless Chromium with the real data and on the live app through its logs; it has not yet been looked at on screen in WebKitGTK.

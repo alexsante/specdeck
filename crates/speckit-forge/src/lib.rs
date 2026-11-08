@@ -155,9 +155,18 @@ pub fn position(st: &Status, file: &str, start: u32, end: u32) -> Result<Positio
     })
 }
 
+/// Is the forge's CLI installed and signed in? Checked once at launch for the welcome view.
+#[derive(Serialize, Clone, Debug, Default)]
+pub struct Ready {
+    pub ok: bool,
+    pub login: Option<String>,
+    pub message: String,
+}
+
 /// A forge adapter. `feature` is a folder name under `specs/`; `branch_hint` is the
 /// spec's `**Feature Branch**:` header.
 pub trait Forge: Send + Sync {
+    fn ready(&self) -> Ready;
     fn status(&self, repo: &Path, feature: &str, branch_hint: Option<&str>) -> Status;
     fn add_comment(&self, cr: &ChangeRequest, pos: &Position, body: &str, pending: bool) -> Result<(), String>;
     /// Always submitted as a plain comment review: no approve, no request changes (FR-063).
