@@ -343,12 +343,12 @@ a:hover { text-decoration: underline; }
 .tl2-today { position: absolute; z-index: 2; pointer-events: none; width: 2px; margin-left: -1px; background: var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent); }
 .thead .nowflag { position: absolute; bottom: 0; height: 8px; width: 2px; margin-left: -1px; background: var(--accent); }
 .thead .nowflag::before { content: "Today"; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 9.5px; font-weight: 700; color: #fff; background: var(--accent); padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
-.bar { position: absolute; top: 50%; height: 12px; margin-top: -6px; border-radius: 6px; background: color-mix(in srgb, var(--c) 26%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent); overflow: hidden; }
-.bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); border-radius: 6px 0 0 6px; opacity: .9; }
-.bar.done .fill { border-radius: 6px; }
-.bar .idle { position: absolute; right: 0; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--warn) 55%, transparent) 4px 5.5px); }
-.bar.cur { background: var(--grad); box-shadow: 0 0 14px -2px #9a85f2; height: 14px; margin-top: -7px; }
-.bar.cur .fill { background: rgb(255 255 255 / .35); }
+.tlbar { position: absolute; top: 50%; height: 12px; margin-top: -6px; border-radius: 6px; background: color-mix(in srgb, var(--c) 26%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent); overflow: hidden; }
+.tlbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); border-radius: 6px 0 0 6px; opacity: .9; }
+.tlbar.done .fill { border-radius: 6px; }
+.tlbar .idle { position: absolute; right: 0; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--warn) 55%, transparent) 4px 5.5px); }
+.tlbar.cur { background: var(--grad); box-shadow: 0 0 14px -2px #9a85f2; height: 14px; margin-top: -7px; }
+.tlbar.cur .fill { background: rgb(255 255 255 / .35); }
 .trk .note { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .trk .note .warn { color: var(--warn); }
 .mk { position: absolute; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); z-index: 2; box-sizing: border-box; display: inline-block; }
@@ -763,7 +763,7 @@ function renderTimeline() {
       rows += `<div class="${cls}" style="height:${ROW}px" data-tlsel="${esc(f.id)}">
         <div class="lab" title="${esc(f.title)}">${isCur ? '<span class="pulse"></span>' : `<i class="dot" style="background:${STAGE_COLOR[f.stage]}"></i>`}<span class="tt">${esc(f.title)}</span><span class="tk2">${esc(f.ticket)}</span></div>
         <div class="trk" style="width:${W}px">
-          <div class="bar ${isCur ? "cur" : ""} ${f.stage === "Done" ? "done" : ""}" style="left:${x}px;width:${w}px;--c:${STAGE_COLOR[f.stage]}" title="${esc(`${f.title}\n${fmtDate(it.s.start)} → ${inFlight(f) ? "today" : fmtDate(it.s.end)} · ${lead} days · ${t ? `${d}/${t} tasks` : f.stage}`)}">
+          <div class="tlbar ${isCur ? "cur" : ""} ${f.stage === "Done" ? "done" : ""}" style="left:${x}px;width:${w}px;--c:${STAGE_COLOR[f.stage]}" title="${esc(`${f.title}\n${fmtDate(it.s.start)} → ${inFlight(f) ? "today" : fmtDate(it.s.end)} · ${lead} days · ${t ? `${d}/${t} tasks` : f.stage}`)}">
             <i class="fill" style="width:${pct}%"></i>${idleW > ppd ? `<i class="idle" style="width:${idleW}px"></i>` : ""}</div>
           ${it.ev.map(e => `<i class="mk ${e.kind}" style="left:${X(e.d) + ppd / 2}px" title="${esc(fmtDate(e.d) + " · " + e.label)}"></i>`).join("")}
           <span class="note" style="left:${x + w + 10}px">${note}</span>
@@ -828,7 +828,7 @@ function renderTimeline() {
       <span><i class="mk rv-PASS"></i>Post-implementation review</span>
       <span><i class="mk merged"></i>Merged</span>
       <span><i class="mk last"></i>Last commit</span>
-      <span><i class="bar" style="position:relative;display:inline-block;width:34px;margin:0;top:0;--c:var(--warn)"><i class="idle" style="width:100%"></i></i>Idle since last commit</span>
+      <span><i class="tlbar" style="position:relative;display:inline-block;width:34px;margin:0;top:0;--c:var(--warn)"><i class="idle" style="width:100%"></i></i>Idle since last commit</span>
     </div>
     <div class="tl2" style="--lw:${LW}px"><div class="tl2-in" style="width:${LW + W}px">
       <div class="tr thead"><div class="lab">${plural(items.length, "spec")}</div><div class="trk" style="width:${W}px">${head}<i class="nowflag" style="left:${nowX}px"></i></div></div>
