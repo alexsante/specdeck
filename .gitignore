@@ -1,0 +1,7 @@
+# Generated from a real Spec Kit repo; may contain private project content.
+prototype/data.json
+prototype/mockup.html
+prototype/spec-deck-mockup.html
+
+.DS_Store
+__pycache__/
