@@ -443,6 +443,7 @@ a:hover { text-decoration: underline; }
 .nextbox, .kpi.clickable { cursor: pointer; }
 .mdlink { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
 .mdlink:hover { text-decoration-style: solid; }
+/*__RVCSS__*/
 </style>
 </head>
 <body>
@@ -452,9 +453,13 @@ a:hover { text-decoration: underline; }
     <aside class="side" id="side"></aside>
     <main class="main" id="main"></main>
   </div>
+  <div id="rvbar"></div>
 </div>
 <div id="modal" hidden></div>
+<div id="rvdialog"></div>
 <div class="toast" id="toast"></div>
+<script>/*__RVJS__*/</script>
+<script>/*__RVMOCK__*/</script>
 <script>
 const DATA = /*__DATA__*/null;
 const STAGES = DATA.stages; // Specified … Done
@@ -517,18 +522,32 @@ function unfinished(f) {
 const waitingList = F.filter(f => waiting(f).length);
 const unfinishedList = F.filter(f => unfinished(f).length || f.stage === "Building");
 const agentHeavy = F.filter(f => f.stage !== "Done" && dec(f).agent + dec(f).flagged > 0);
-const NAVS = [["all", "All specs"], ["timeline", "Timeline"], ["waiting", "Waiting on me"], ["unfinished", "Unfinished"], ["agent", "Agent decisions"]];
-const LISTS = { all: F, timeline: F.filter(inFlight), waiting: waitingList, unfinished: unfinishedList, agent: agentHeavy };
+const NAVS = [["all", "All specs"], ["timeline", "Timeline"], ["waiting", "Waiting on me"], ["unfinished", "Unfinished"], ["agent", "Agent decisions"], ["review", "Open review threads"]];
+const LISTS = { all: F, timeline: F.filter(inFlight), waiting: waitingList, unfinished: unfinishedList, agent: agentHeavy, review: [] };
 const ICONS = {
   all: '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
   timeline: '<path d="M2 4h7M5 8h9M3 12h6"/>',
   waiting: '<circle cx="8" cy="8" r="6"/><path d="M8 5v3.5M8 11h.01"/>',
   unfinished: '<circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor" stroke="none"/>',
   agent: '<path d="M8 2l1.4 4.6L14 8l-4.6 1.4L8 14l-1.4-4.6L2 8l4.6-1.4z"/>',
+  review: '<path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>',
 };
 const icon = k => `<svg viewBox="0 0 16 16" aria-hidden="true">${ICONS[k]}</svg>`;
 const stageCount = s => F.filter(f => f.stage === s).length;
 const cur = DATA.current && byId[DATA.current.feature];
+
+// ---------- review threads on GitHub (User Story 10; the layer lives in review-layer.js) ----------
+// @rv-backend-start
+const RV_SAMPLE = (DATA.current && byId[DATA.current.feature]) || F.find(f => f.stage === "Building") || F[0];
+const RV = createReview({
+  backend: createMockBackend({ esc, me: "you", repo: "your-org/" + DATA.project, branch: RV_SAMPLE.branch || "feature/sample", feature: RV_SAMPLE.id,
+    pr: { number: 217, head: "7166855", changedFiles: 121, specFiles: 12 }, files: RV_SAMPLE.files.filter(x => /\.md$/.test(x)),
+    threads: sampleThreads("you").map(t => ({ ...t, path: "spec.md" })), scenario: () => "ready" }),
+  esc, toast, rerender: () => render(), openTab: tab => { state.docTab = tab; render(); },
+  copy: text => navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject("Copy is blocked here."),
+  openUrl: url => window.open(url, "_blank", "noopener"),
+});
+// @rv-backend-end
 
 // ---------- small renderers ----------
 const pill = (s, src) => `<span class="pill ${src === "status" ? "from-status" : ""}" ${src === "status" ? 'title="Stage taken from the spec Status line (no tasks.md)"' : ""} style="color:${STAGE_COLOR[s]};background:color-mix(in srgb, ${STAGE_COLOR[s]} 14%, transparent)">${s}${src === "status" ? "*" : ""}</span>`;
@@ -564,6 +583,7 @@ function row(f) {
 
 // ---------- sidebar ----------
 function renderSide() {
+  LISTS.review = F.filter(f => RV.counts()[f.id] > 0);
   const navs = NAVS.map(([k, l]) => [k, l, LISTS[k].length]);
   const stageBtn = s => `<button class="${state.stage === s && state.view === "project" ? "on" : ""}" data-stage="${s}"><span class="dot" style="background:${STAGE_COLOR[s]}"></span>${s}<span class="n">${stageCount(s)}</span></button>`;
   document.getElementById("side").innerHTML = `
@@ -989,7 +1009,7 @@ function renderSpec() {
     <div class="crumbs"><button data-back>‹ ${esc(DATA.project)}</button><span>/</span><span class="mono">${esc(f.ticket)}</span><span>/</span><span class="mono">${esc(f.slug)}</span></div>
     <div class="spechead"><div style="min-width:0;flex:1 1 380px">
         <h1>${esc(f.title)}</h1>
-        <div class="meta">${pill(f.stage, f.stageSource)}<span class="tk">${esc(f.ticket)}</span>${f.branch ? `<span class="mono">⎇ ${esc(f.branch)}</span>` : ""}${f.created ? `<span>Created ${esc(f.created)}</span>` : ""}<span>Last commit ${ago(f.lastCommit)} ago</span>${f.clickup ? `<a href="${esc(f.clickup)}" target="_blank" rel="noopener">ClickUp ↗</a>` : ""}</div>
+        <div class="meta">${pill(f.stage, f.stageSource)}<span class="tk">${esc(f.ticket)}</span>${f.branch ? `<span class="mono">⎇ ${esc(f.branch)}</span>` : ""}${RV.chip(f)}${f.created ? `<span>Created ${esc(f.created)}</span>` : ""}<span>Last commit ${ago(f.lastCommit)} ago</span>${f.clickup ? `<a href="${esc(f.clickup)}" target="_blank" rel="noopener">ClickUp ↗</a>` : ""}</div>
       </div>
       <div class="actions"><button class="btn" data-toast="Opened folder in editor">Open in editor</button><button class="btn" data-toast="Revealed in Finder">Reveal</button>${nextCmd ? `<button class="btn primary" data-copy="${nextCmd} specs/${esc(f.id)}">Copy ${nextCmd}</button>` : ""}</div>
     </div>
@@ -1012,9 +1032,9 @@ function renderSpec() {
       </div>
     </div>
     <div class="card panel sect"><header>Decisions<span class="r">## Clarifications sessions, by who decided</span></header>${decisions}</div>
-    <div class="card panel docs sect"><header>Documents<span class="r">${docs.length} artifacts</span></header>
-      <div class="tabs">${docs.map(x => `<button class="${state.docTab === x ? "on" : ""}" data-doc="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      <div class="body">${docBody}</div></div>`;
+    <div class="sect">${RV.line(f, state.docTab)}${RV.grid(f, `<div class="card panel docs"><header>Documents<span class="r">${docs.length} artifacts</span></header>
+      <div class="tabs">${docs.map(x => `<button class="${state.docTab === x ? "on" : ""}" data-doc="${esc(x)}">${esc(x)}${RV.tabCount(f, x)}</button>`).join("")}</div>
+      <div class="body">${docBody}</div></div>`)}</div>`;
 }
 
 function render() {
@@ -1022,6 +1042,7 @@ function render() {
   renderSide();
   state.view === "spec" ? renderSpec() : renderProject();
   renderModal();
+  RV.afterRender(state.view === "spec" ? byId[state.spec] : null, state.docTab);
 }
 
 function toast(html) {
@@ -1030,6 +1051,7 @@ function toast(html) {
 }
 
 document.addEventListener("click", e => {
+  if (RV.click(e)) return;
   const el = e.target.closest("[data-openpath],[data-close],[data-mnav],[data-task],[data-story],[data-tlset],[data-tltoday],[data-tlgroup],[data-zoom],[data-tlsel],[data-open],[data-nav],[data-stage],[data-group],[data-back],[data-toggle-done],[data-phase],[data-sess],[data-dkind],[data-doc],[data-copy],[data-toast]");
   if (!el) return;
   const ds = el.dataset;
@@ -1086,11 +1108,12 @@ function route() {
 }
 addEventListener("hashchange", route);
 document.addEventListener("keydown", e => {
-  if (!state.modal) return;
+  if (!state.modal) return RV.key(e);
   if (e.key === "Escape") { state.modal = null; renderModal(); }
   else if (e.key === "ArrowLeft") stepModal(-1);
   else if (e.key === "ArrowRight") stepModal(1);
 });
+RV.loadCounts();
 route();
 </script>
 </body>

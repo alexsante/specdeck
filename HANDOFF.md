@@ -79,11 +79,16 @@ Layout:
 ```
 Cargo.toml                  workspace
 crates/speckit-core/        parser + model (port of prototype/extract.py), `speckit-dump` CLI
+crates/speckit-forge/       review threads on GitHub through `gh` (User Story 10), `forge-status` CLI
 app/src-tauri/              Tauri 2 app: commands, file watcher, markdown rendering (comrak)
 app/ui/index.html           interface, generated from prototype/template.html by scripts/make_ui.py
 app/ui/vendor/              Mermaid 12.2.0, bundled for offline use
 scripts/parity.py           diff the Rust and Python parser output
 scripts/make_ui.py          turn the mockup template into the app interface
+prototype/review-layer.js   review UI (chip, status line, gutters, threads, Conversations, submit); one source for both mockups and the app
+prototype/review-layer.css  its styles
+prototype/review-mock.js    sample backend for the mockups (never reaches the app)
+prototype/review.html       PR-review mockup page; build with prototype/build_review.py
 ```
 
 Design workflow: change `prototype/template.html`, review it as the mockup (`python3 -I prototype/build.py`, open `prototype/mockup.html`), then regenerate the app interface with `python3 -I scripts/make_ui.py prototype/template.html app/ui/index.html`. Don't edit `app/ui/index.html` by hand; the next regeneration overwrites it. The script stops if a template change breaks one of its anchors.
@@ -93,6 +98,9 @@ Run it:
 ```sh
 cargo run -p spec-deck -- ~/path/to/proj-nava          # or launch without a path and use "Open project…"
 cargo run -p spec-deck -- --dump-view ~/path/to/repo    # print the JSON the interface receives
+cargo run -p spec-deck -- --dump-doc REPO FEATURE spec.md     # rendered document with data-sourcepos
+cargo run -p spec-deck -- --dump-review REPO FEATURE [BRANCH] # review status (calls GitHub, read-only)
+cargo test                                                # all crates; SC-007 runs over ~/Projects/proj-nava when present
 cargo test -p speckit-core
 python3 -I prototype/extract.py REPO /tmp/py.json \
   && cargo run -q -p speckit-core --bin speckit-dump REPO /tmp/rs.json \
@@ -108,6 +116,7 @@ What the proof of concept proves:
 - Live reload: editing a `tasks.md` pushes a new model about 120 ms later. On Linux, file *reads* also raise watch events; they are filtered out, or every reload would trigger another.
 - Documents rendered by comrak, Mermaid drawn in the web view.
 - Timeline v2 (approved 2026-11-08): fixed label column, grouping by ticket or stage, true-length bars with tasks-done fill and idle hatching, lifecycle milestones (created, clarify sessions by who decided, analyze and review passes, merge), dependency arrows for the selected spec, lead-time summary.
+- Review on GitHub (User Story 10, plan and tasks in `specs/001-command-center/`): readiness checks, threads in place, comment on block line ranges, pending review submitted as Comment only, reply, resolve, Copy for agent, "Open review threads" view. Checked read-only against proj-nava PRs #217, #203, #171 and in headless Chromium; writes are unit-tested but not yet run against a real PR.
 - Task and user-story detail modals: full task text, files (open with the default app), linked story, review findings that mention the task or story; story description, why-this-priority, independent test, Given/When/Then scenarios, tasks. Arrow keys step through, Esc closes.
 
 Known gaps: no recent-projects list yet (only the last one); no specs from other branches (v2); the window title does not follow the view; git dates are re-read on every reload (could be cached until `.git/logs/HEAD` changes); unsigned and unbundled. The interface was checked in headless Chromium with the real data and on the live app through its logs; it has not yet been looked at on screen in WebKitGTK.

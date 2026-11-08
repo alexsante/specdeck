@@ -3232,6 +3232,7 @@ dependencies = [
  "serde",
  "serde_json",
  "speckit-core",
+ "speckit-forge",
  "tauri",
  "tauri-build",
  "tauri-plugin-clipboard-manager",
@@ -3244,6 +3245,14 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "regex",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "speckit-forge"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_json",
 ]

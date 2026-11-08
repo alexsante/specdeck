@@ -6,6 +6,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod review;
 mod view;
 
 use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
@@ -18,9 +19,13 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::DialogExt;
 
 #[derive(Default)]
-struct AppState {
+pub struct AppState {
     repo: Mutex<Option<PathBuf>>,
     watcher: Mutex<Option<RecommendedWatcher>>,
+    /// GitHub through the gh CLI (User Story 10).
+    forge: speckit_forge::github::GitHub,
+    /// Review status per feature; cleared when files change on disk.
+    review: Mutex<std::collections::HashMap<String, review::Cached>>,
 }
 
 fn load(repo: &Path) -> Result<Value, String> {
@@ -40,6 +45,7 @@ fn open_repo(app: &AppHandle, repo: PathBuf) -> Result<Value, String> {
     let data = load(&repo)?;
     let state = app.state::<AppState>();
     *state.repo.lock().unwrap() = Some(repo.clone());
+    state.review.lock().unwrap().clear();
     if let Some(f) = last_project_file(app) {
         let _ = std::fs::create_dir_all(f.parent().unwrap());
         let _ = std::fs::write(f, repo.display().to_string());
@@ -86,6 +92,8 @@ fn open_repo(app: &AppHandle, repo: PathBuf) -> Result<Value, String> {
             if open.as_deref() != Some(watched.as_path()) {
                 return; // another project was opened
             }
+            // Line numbers may have moved: the next review call re-checks the files.
+            handle.state::<AppState>().review.lock().unwrap().clear();
             if let Ok(data) = load(&watched) {
                 let _ = handle.emit("project-updated", data);
                 eprintln!("[spec-deck] change on disk: pushed project-updated");
@@ -96,7 +104,7 @@ fn open_repo(app: &AppHandle, repo: PathBuf) -> Result<Value, String> {
     Ok(data)
 }
 
-fn current_repo(state: &State<AppState>) -> Result<PathBuf, String> {
+fn current_repo(state: &AppState) -> Result<PathBuf, String> {
     state.repo.lock().unwrap().clone().ok_or_else(|| "No project is open.".into())
 }
 
@@ -141,7 +149,7 @@ fn feature_path(repo: &Path, feature: &str, file: Option<&str>) -> Result<PathBu
     Ok(p)
 }
 
-fn markdown_html(md: &str) -> String {
+fn md_options() -> comrak::Options<'static> {
     let mut o = comrak::Options::default();
     o.extension.table = true;
     o.extension.strikethrough = true;
@@ -149,7 +157,37 @@ fn markdown_html(md: &str) -> String {
     o.extension.autolink = true;
     o.extension.footnotes = true;
     // Raw HTML in the markdown stays escaped.
-    comrak::markdown_to_html(md, &o)
+    o
+}
+
+/// Parse markdown, pulling each block's end back to its last non-blank line
+/// (comrak lets a list's last item run over the blank line after it).
+pub fn parse_md<'a>(arena: &'a comrak::Arena<'a>, md: &str, o: &comrak::Options) -> &'a comrak::nodes::AstNode<'a> {
+    let root = comrak::parse_document(arena, md, o);
+    let lines: Vec<&str> = md.lines().collect();
+    let blank = |n: usize| lines.get(n.wrapping_sub(1)).map_or(true, |l| l.trim().is_empty());
+    for n in root.descendants() {
+        let mut d = n.data.borrow_mut();
+        if d.value.block() {
+            while d.sourcepos.end.line > d.sourcepos.start.line && blank(d.sourcepos.end.line) {
+                d.sourcepos.end.line -= 1;
+                d.sourcepos.end.column = lines.get(d.sourcepos.end.line - 1).map_or(1, |l| l.len().max(1));
+            }
+        }
+    }
+    root
+}
+
+/// Render markdown. With `sourcepos`, block elements carry `data-sourcepos="l:c-l:c"`,
+/// which the interface uses to put comments on the right source lines (FR-062).
+pub fn markdown_html(md: &str, sourcepos: bool) -> String {
+    let mut o = md_options();
+    o.render.sourcepos = sourcepos;
+    let arena = comrak::Arena::new();
+    let root = parse_md(&arena, md, &o);
+    let mut out = String::new();
+    let _ = comrak::format_html(root, &o, &mut out);
+    out
 }
 
 fn esc(s: &str) -> String {
@@ -162,7 +200,7 @@ fn file_html(path: &Path) -> String {
         return format!("<p class=\"dim\">{} is not a text file.</p>", esc(&name));
     };
     if name.ends_with(".md") {
-        markdown_html(&text)
+        markdown_html(&text, true)
     } else {
         let lang = path.extension().map(|e| e.to_string_lossy().into_owned()).unwrap_or_default();
         format!("<pre><code class=\"language-{}\">{}</code></pre>", esc(&lang), esc(&text))
@@ -173,8 +211,11 @@ fn file_html(path: &Path) -> String {
 #[tauri::command]
 fn read_doc(state: State<AppState>, feature: String, file: String) -> Result<String, String> {
     eprintln!("[spec-deck] read_doc {feature}/{file}");
-    let repo = current_repo(&state)?;
-    let p = feature_path(&repo, &feature, Some(&file))?;
+    render_doc(&current_repo(&state)?, &feature, &file)
+}
+
+fn render_doc(repo: &Path, feature: &str, file: &str) -> Result<String, String> {
+    let p = feature_path(repo, feature, Some(file))?;
     if !p.is_dir() {
         return Ok(file_html(&p));
     }
@@ -183,7 +224,7 @@ fn read_doc(state: State<AppState>, feature: String, file: String) -> Result<Str
     let mut html = String::new();
     for e in entries.iter().filter(|e| e.is_file()) {
         let name = e.file_name().unwrap().to_string_lossy();
-        html.push_str(&format!("<section class=\"docfile\"><div class=\"docfile-name\">{}/{}</div>{}</section>", esc(&file), esc(&name), file_html(e)));
+        html.push_str(&format!("<section class=\"docfile\" data-path=\"{0}/{1}\"><div class=\"docfile-name\">{0}/{1}</div>{2}</section>", esc(&file), esc(&name), file_html(e)));
     }
     Ok(if html.is_empty() { "<p class=\"dim\">This folder is empty.</p>".into() } else { html })
 }
@@ -254,11 +295,116 @@ fn main() {
         }
         return;
     }
+    // `--dump-doc <repo> <feature> <file>` and `--dump-review <repo> <feature> [branch]`: debugging aids.
+    if args.get(1).map(String::as_str) == Some("--dump-doc") && args.len() >= 5 {
+        let repo = std::fs::canonicalize(&args[2]).expect("repo path");
+        match render_doc(&repo, &args[3], &args[4]) {
+            Ok(h) => println!("{h}"),
+            Err(e) => {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+    if args.get(1).map(String::as_str) == Some("--dump-review") && args.len() >= 4 {
+        let repo = std::fs::canonicalize(&args[2]).expect("repo path");
+        let st = speckit_forge::Forge::status(&speckit_forge::github::GitHub::default(), &repo, &args[3], args.get(4).map(String::as_str));
+        println!("{}", review::to_view(&st));
+        return;
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState::default())
-        .invoke_handler(tauri::generate_handler![current_project, pick_project, read_doc, open_feature, open_path, open_url, copy_text])
+        .invoke_handler(tauri::generate_handler![
+            current_project, pick_project, read_doc, open_feature, open_path, open_url, copy_text,
+            review::review_status, review::review_counts, review::review_comment, review::review_submit,
+            review::review_discard, review::review_reply, review::review_resolve, review::review_edit, review::review_delete
+        ])
         .run(tauri::generate_context!())
         .expect("error while running Spec Deck");
+}
+
+#[cfg(test)]
+mod sourcepos {
+    //! SC-007: every commentable block maps to exactly its source lines.
+    use comrak::nodes::NodeValue;
+
+    /// The blocks the interface makes commentable: top-level blocks, and each item of a top-level list.
+    fn blocks(md: &str) -> Vec<(usize, usize)> {
+        let arena = comrak::Arena::new();
+        let root = super::parse_md(&arena, md, &super::md_options());
+        let mut out = Vec::new();
+        for n in root.children() {
+            let d = n.data.borrow();
+            if matches!(d.value, NodeValue::List(_)) {
+                for it in n.children() {
+                    let p = it.data.borrow().sourcepos;
+                    out.push((p.start.line, p.end.line));
+                }
+            } else {
+                out.push((d.sourcepos.start.line, d.sourcepos.end.line));
+            }
+        }
+        out
+    }
+
+    fn check(md: &str) -> Result<(), String> {
+        let lines: Vec<&str> = md.lines().collect();
+        let blank = |n: usize| lines.get(n - 1).map_or(true, |l| l.trim().is_empty());
+        let bs = blocks(md);
+        let mut covered = vec![false; lines.len() + 1];
+        let mut prev_end = 0;
+        for &(a, b) in &bs {
+            if a > b || a <= prev_end {
+                return Err(format!("block {a}-{b} overlaps or is reversed (previous ended at {prev_end})"));
+            }
+            if blank(a) || blank(b) {
+                return Err(format!("block {a}-{b} starts or ends on a blank line"));
+            }
+            for c in covered.iter_mut().take(b.min(lines.len()) + 1).skip(a) {
+                *c = true;
+            }
+            prev_end = b;
+        }
+        for (i, l) in lines.iter().enumerate() {
+            let t = l.trim();
+            // Link reference definitions produce no node.
+            let refdef = t.starts_with('[') && t.contains("]:");
+            if !t.is_empty() && !covered[i + 1] && !refdef {
+                return Err(format!("line {} is in no block: {t:.60}", i + 1));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn small_cases() {
+        check("# T\n\npara\nwraps\n\n- a\n- b\n\n  more b\n\n| x |\n|---|\n| 1 |\n\n```\ncode\n```\n").unwrap();
+        assert_eq!(blocks("# T\n\n- a\n- b\n"), vec![(1, 1), (3, 3), (4, 4)]);
+    }
+
+    #[test]
+    fn proj_nava() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let specs = std::path::Path::new(&home).join("Projects/proj-nava/specs");
+        let Ok(dirs) = std::fs::read_dir(&specs) else {
+            eprintln!("proj-nava not found; skipped");
+            return;
+        };
+        let (mut files, mut nblocks, mut bad) = (0, 0, Vec::new());
+        for d in dirs.flatten() {
+            for name in ["spec.md", "plan.md", "tasks.md"] {
+                let Ok(md) = std::fs::read_to_string(d.path().join(name)) else { continue };
+                files += 1;
+                nblocks += blocks(&md).len();
+                if let Err(e) = check(&md) {
+                    bad.push(format!("{}/{name}: {e}", d.file_name().to_string_lossy()));
+                }
+            }
+        }
+        eprintln!("SC-007: {files} files, {nblocks} blocks, {} problems", bad.len());
+        assert!(bad.is_empty(), "{}", bad.join("\n"));
+    }
 }

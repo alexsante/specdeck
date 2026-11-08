@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/speckit-core", "app/src-tauri"]
+members = ["crates/speckit-core", "crates/speckit-forge", "app/src-tauri"]
 
 [workspace.package]
 edition = "2021"

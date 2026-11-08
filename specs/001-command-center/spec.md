@@ -3,7 +3,7 @@
 **Feature Directory**: `specs/001-command-center`
 **Feature Branch**: `001-command-center`
 **Created**: 2026-11-08
-**Status**: Clarified. All brainstorm questions answered by the human on 2026-11-08; User Story 10 (PR review comments) added and clarified the same day. Ready for `/speckit-plan`.
+**Status**: Clarified. All brainstorm questions answered by the human on 2026-11-08; User Story 10 (PR review comments) added, clarified, planned (`plan.md`) and implemented (`tasks.md`; live write test pending) the same day.
 **Input**: A standalone desktop app (Linux first, then macOS, then Windows) that, when pointed at a project that uses Spec Kit, reads the `specs/` tree and renders a command center: a project view that shows where every spec stands, and a per-spec view that shows the spec, plan, tasks, progress, open questions, and review health in one clean interface. Read-only toward the repo; review comments go to the spec's GitHub pull request. Personal tool first; may be shared with the team later.
 **Working name**: Spec Deck (placeholder)
 **Reference repo**: `proj-nava` (104 feature folders, 2,044 tasks, 196 clarification sessions, 68 reviews), checked 2026-11-08.
@@ -246,7 +246,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 
 **Review on GitHub**
 
-- **FR-060**: Before enabling comments, the app MUST check, in this order: the GitHub CLI (`gh`) is installed; it is signed in with a valid token; the remote responds; the checked-out branch has an open pull request; local `HEAD` equals the PR head commit; the file being viewed has no uncommitted changes. The first three failures disable reading and writing threads; the last three disable writing only (the last one for that file only). Each failure MUST show one line that names what is missing and how to fix it, with a "Check again" action.
+- **FR-060**: Before enabling comments, the app MUST check, in this order: the GitHub CLI (`gh`) is installed; it is signed in with a valid token; the remote responds; the spec has a pull request (the checked-out branch's PR when it touches the feature folder, else the PR for the spec's `**Feature Branch**:`); that pull request is open; the file being viewed is byte-identical to the file at the PR head (local blob hash equals the PR file's blob). The first four failures disable reading and writing threads; a merged or closed PR disables writing; a file that differs disables writing and in-place threads for that file only, and its message names the cause (uncommitted edits, another branch checked out, unpushed or unpulled commits, or the file is not changed in the PR). Each failure MUST show one line that names what is missing and how to fix it, with a "Check again" action.
 - **FR-061**: The app MUST talk to GitHub only through `gh` and MUST NOT store or read tokens itself.
 - **FR-062**: The app MUST map each rendered block (paragraph, list item, table, heading, code block) to its source line range, and post comments as multi-line review comments on those lines at the PR head commit. Lines outside the PR diff MUST fall back to a file-level comment.
 - **FR-063**: Comments MUST go into a pending review by default, with "Comment now" for a single comment. Reviews MUST be submitted with the Comment event only.
@@ -327,3 +327,4 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - Q: Offer Approve and Request changes? → A: No, comment only. In proj-nava the spec and its code share one PR (PR #217: 12 spec files, 109 code files), so approving from the app would approve unreviewed code (FR-063).
 - Q: A new spec or a story in this one? → A: A new user story in this spec (User Story 10).
 - Q: Platforms? → A: Linux first, then macOS, then Windows.
+- Q: Gate writes on local `HEAD` equal to the PR head plus a clean file? → A: Replaced during planning by one exact per-file check: the file on disk must match the PR head's blob. `HEAD` equality blocked comments when unrelated commits were unpushed and let uncommitted edits through. The message still names the cause (plan.md, Research decisions).

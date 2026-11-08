@@ -64,6 +64,8 @@ def main():
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     html = open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     html = html.replace("/*__DATA__*/null", blob)
+    read = lambda n: open(os.path.join(HERE, n), encoding="utf-8").read()
+    html = html.replace("/*__RVCSS__*/", read("review-layer.css")).replace("/*__RVJS__*/", read("review-layer.js")).replace("/*__RVMOCK__*/", read("review-mock.js"))
     with open(os.path.join(HERE, "mockup.html"), "w", encoding="utf-8") as fh:
         fh.write(html)
     print(f"mockup.html: {len(html.encode()) / 1024:.0f} KB")

@@ -64,6 +64,7 @@ body { padding: 0 !important; overflow: hidden; }
 .doc input[type="checkbox"] { margin-right: 6px; }
 .docfile + .docfile { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
 .docfile-name { font-family: var(--mono); font-size: 11.5px; color: var(--dim); margin-bottom: 6px; }
+.doc h2.rv-blk > .rv-gut { top: 14px; }
 
 /* ---------- empty state ---------- */
 .empty-state { max-width: 460px; margin: 14vh auto 0; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
@@ -83,7 +84,7 @@ rep("const F = DATA.features;\nconst byId = Object.fromEntries(F.map(f => [f.id,
 rep_line("const waitingList = ", "let waitingList = [], unfinishedList = [], agentHeavy = [];")
 rep_line("const unfinishedList = ", "")
 rep_line("const agentHeavy = ", "")
-rep_line("const LISTS = ", "let LISTS = { all: [], timeline: [], waiting: [], unfinished: [], agent: [] };")
+rep_line("const LISTS = ", "let LISTS = { all: [], timeline: [], waiting: [], unfinished: [], agent: [], review: [] };")
 rep_line("const cur = DATA.current", "let cur = null;")
 rep_line("const TODAY = ", "let TODAY = new Date();")
 
@@ -161,6 +162,7 @@ async function loadDoc() {
       const nodes = blocks.map(code => {
         const div = document.createElement("div");
         div.className = "mermaid";
+        div.dataset.sourcepos = code.parentElement.dataset.sourcepos || "";
         div.textContent = code.textContent;
         code.parentElement.replaceWith(div);
         return div;
@@ -168,7 +170,8 @@ async function loadDoc() {
       await m.run({ nodes });
     } catch (e) { console.warn("mermaid", e); }
   }
-  docCache.set(key, now.innerHTML);
+  docCache.set(key, now.innerHTML); // cached before the review layer decorates it
+  RV.afterRender(byId[feature], file);
 }
 
 function setData(d) {
@@ -178,7 +181,7 @@ function setData(d) {
   waitingList = F.filter(f => waiting(f).length);
   unfinishedList = F.filter(f => unfinished(f).length || f.stage === "Building");
   agentHeavy = F.filter(f => f.stage !== "Done" && dec(f).agent + dec(f).flagged > 0);
-  LISTS = { all: F, timeline: F.filter(inFlight), waiting: waitingList, unfinished: unfinishedList, agent: agentHeavy };
+  LISTS = { all: F, timeline: F.filter(inFlight), waiting: waitingList, unfinished: unfinishedList, agent: agentHeavy, review: [] };
   cur = d.current && byId[d.current.feature];
   docCache.clear();
 }
@@ -188,6 +191,8 @@ async function pickProject() {
     const d = await invoke("pick_project");
     if (!d) return; // cancelled
     setData(d);
+    RV.reset();
+    RV.loadCounts();
     Object.assign(state, { stage: null, nav: "all", q: "", tlSel: null, tlCenter: true, modal: null });
     if (location.hash) location.hash = ""; else route();
   } catch (e) {
@@ -221,6 +226,7 @@ document.addEventListener("click", e => {
 T.event.listen("project-updated", e => {
   const main = document.getElementById("main"), top = main.scrollTop;
   setData(e.payload);
+  RV.invalidate();
   render();
   main.scrollTop = top;
   toast("Updated from disk");
@@ -228,7 +234,7 @@ T.event.listen("project-updated", e => {
 (async () => {
   try {
     const d = await invoke("current_project");
-    if (d) setData(d);
+    if (d) { setData(d); RV.loadCounts(); }
   } catch (e) {
     return renderEmpty(String(e));
   }
@@ -236,7 +242,33 @@ T.event.listen("project-updated", e => {
 })();
 </script>""")
 
+# ---------------------------------------------------------------- review layer: real backend, shared code inlined
+start, end = s.index("// @rv-backend-start"), s.index("// @rv-backend-end") + len("// @rv-backend-end")
+s = s[:start] + """const RV = createReview({
+  backend: {
+    status: (feature, branch, force) => invoke("review_status", { feature, branch, force }),
+    counts: () => invoke("review_counts"),
+    comment: (feature, file, start, end, body, pending) => invoke("review_comment", { feature, file, start, end, body, pending }),
+    submit: (feature, body) => invoke("review_submit", { feature, body }),
+    discard: feature => invoke("review_discard", { feature }),
+    reply: (feature, thread, body) => invoke("review_reply", { feature, thread, body }),
+    resolve: (feature, thread, resolved) => invoke("review_resolve", { feature, thread, resolved }),
+    edit: (feature, comment, body) => invoke("review_edit", { feature, comment, body }),
+    del: (feature, comment) => invoke("review_delete", { feature, comment }),
+  },
+  esc, toast, rerender: () => render(), openTab: tab => { state.docTab = tab; render(); },
+  copy: text => invoke("copy_text", { text }),
+  openUrl: url => invoke("open_url", { url }),
+});""" + s[end:]
+rep("<script>/*__RVMOCK__*/</script>\n", "")
+import os
+proto = os.path.dirname(os.path.abspath(src))
+read = lambda n: open(os.path.join(proto, n), encoding="utf-8").read()
+rep("/*__RVCSS__*/", read("review-layer.css"))
+rep("/*__RVJS__*/", read("review-layer.js"))
+
 assert "/*__DATA__*/" not in s
+assert "createMockBackend" not in s, "mockup sample data would reach the app"
 assert 'data-toast="' not in s, "a mockup-only toast button would reach the app"
 open(out, "w", encoding="utf-8").write(s)
 print("wrote", out, len(s), "bytes")

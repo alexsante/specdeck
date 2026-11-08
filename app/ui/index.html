@@ -442,6 +442,91 @@ a:hover { text-decoration: underline; }
 .nextbox, .kpi.clickable { cursor: pointer; }
 .mdlink { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
 .mdlink:hover { text-decoration-style: solid; }
+/* ---------- review on GitHub (User Story 10); shared by the mockups and the app ---------- */
+.rv-chip { display: inline-flex; gap: 6px; align-items: center; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.5px; color: var(--fg); text-decoration: none; }
+.rv-chip:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); text-decoration: none; }
+.rv-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.rv-dot.merged { background: var(--agent); } .rv-dot.closed { background: var(--dim); }
+.rv-line { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); font-size: 12.5px; flex-wrap: wrap; margin: 14px 0 10px; }
+.rv-line .msg { flex: 1 1 300px; min-width: 0; overflow-wrap: anywhere; }
+.rv-lamp { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+.rv-line.off .rv-lamp { background: var(--warn); } .rv-line.wait .rv-lamp { background: var(--dim); }
+.rv-line code, .rv-composer code, .rv-dialog code, .toast code { font-family: var(--mono); font-size: 11.5px; background: color-mix(in srgb, var(--fg) 8%, transparent); padding: 1px 5px; border-radius: 4px; }
+.rv-cnt { margin-left: 6px; font-family: var(--sans); font-size: 10.5px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--fg); }
+.rv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+.rv-grid > * { min-width: 0; }
+@container (max-width: 980px) { .rv-grid { grid-template-columns: 1fr; } .rv-convo { position: static !important; } }
+.rv-convo { position: sticky; top: 10px; }
+.rv-convo header a { font-weight: 400; }
+.rv-filters { display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.rv-filters button { all: unset; cursor: pointer; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: var(--dim); }
+.rv-filters button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--fg); font-weight: 600; }
+.rv-ci { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: none; padding: 9px 12px; cursor: pointer; font-size: 12px; color: var(--fg); }
+.rv-ci:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.rv-ci .top { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; min-width: 0; }
+.rv-ci .top .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.rv-ci .r, .rv-thread .r { margin-left: auto; white-space: nowrap; }
+.rv-ci .ex { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.rv-ci .was { margin-top: 5px; font-size: 11px; color: var(--dim); border-left: 2px solid var(--line); padding-left: 7px; overflow-wrap: anywhere; }
+.rv-ci .rv-av { width: 18px; height: 18px; font-size: 9px; }
+
+/* the document: a gutter with line numbers and a + per block */
+.rv-on { padding-left: 46px !important; }
+.rv-on > ul, .rv-on > ol, .rv-on > section > ul, .rv-on > section > ol { padding-left: 22px; }
+.rv-blk { position: relative; }
+.rv-gut { position: absolute; left: -46px; top: 1px; width: 38px; height: 20px; display: flex; justify-content: flex-end; align-items: center; }
+li.rv-blk > .rv-gut { left: -68px; }
+.rv-gut .ln { font-family: var(--mono); font-size: 10.5px; color: var(--dim); opacity: .55; font-variant-numeric: tabular-nums; user-select: none; font-weight: 400; }
+.rv-add { position: absolute; right: 0; top: 1px; width: 18px; height: 18px; border-radius: 5px; border: 0; background: var(--accent); color: #fff; font-size: 14px; line-height: 18px; padding: 0; cursor: pointer; opacity: 0; font-weight: 600; }
+.rv-blk:hover > .rv-gut .rv-add, .rv-add:focus-visible { opacity: 1; }
+.rv-blk:hover > .rv-gut .ln { opacity: 0; }
+.rv-add.off { background: var(--line); color: var(--dim); cursor: not-allowed; }
+.rv-sel { background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: -46px 0 0 color-mix(in srgb, var(--accent) 10%, transparent); }
+.rv-sel > .rv-gut .ln { opacity: 1; color: var(--accent); }
+.rv-flash { animation: rv-flash 1.4s ease-out; }
+@keyframes rv-flash { from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 55%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .rv-flash { animation: none; } }
+
+.rv-thread, .rv-composer { margin: 6px 0 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); font-size: 12.5px; line-height: 1.45; list-style: none; }
+.rv-thread.resolved { opacity: .8; }
+.rv-thread > .th { display: flex; gap: 8px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.rv-thread.collapsed > .th { border-bottom: 0; cursor: pointer; }
+.rv-cm { padding: 9px 12px; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 0 9px; }
+.rv-cm + .rv-cm { border-top: 1px solid var(--line); }
+.rv-cm .who { font-weight: 600; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.rv-cm .who .dim { font-weight: 400; font-size: 11.5px; }
+.rv-cm .who .acts { margin-left: auto; display: flex; gap: 8px; font-weight: 400; }
+.rv-cm .tx { margin-top: 2px; overflow-wrap: anywhere; }
+.rv-cm .tx > :first-child { margin-top: 0; } .rv-cm .tx > :last-child { margin-bottom: 0; }
+.rv-cm .tx p { margin: 0 0 6px; }
+.rv-cm .tx pre { overflow-x: auto; }
+.rv-av { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; background: var(--info); flex: none; }
+.rv-av.me { background: var(--accent); }
+.rv-thread .tacts { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.rv-thread .tacts a.btn { text-decoration: none; color: var(--fg); }
+.chip.rv-ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.chip.rv-pend { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.rv-composer { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.rv-thread .rv-composer { margin: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+.rv-composer .lbl { font-size: 11.5px; color: var(--dim); }
+.rv-composer .lbl.warn { color: var(--warn); }
+.rv-composer textarea, .rv-dialog textarea { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; min-height: 68px; resize: vertical; width: 100%; box-sizing: border-box; }
+.rv-composer .row2 { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.rv-composer .sp, .rv-bar .sp { flex: 1; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.rv-link { all: unset; cursor: pointer; color: var(--accent); font-size: 11.5px; }
+
+.rv-bar { position: sticky; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 10px 22px; border-top: 1px solid var(--line); background: var(--surface-2); flex-wrap: wrap; font-size: 12.5px; z-index: 5; }
+.rv-scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .45); display: grid; place-items: center; padding: 16px; z-index: 30; }
+.rv-dialog { width: min(540px, 100%); max-height: calc(100% - 32px); overflow-y: auto; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 24px 60px -20px var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 12px; font-size: 12.5px; }
+.rv-dialog h2 { margin: 0; font-size: 16px; }
+.rv-dialog ul { margin: 0; padding-left: 18px; color: var(--dim); }
+.rv-dialog .opt { display: grid; grid-template-columns: 18px 1fr; gap: 2px 8px; align-items: start; }
+.rv-dialog .opt input { margin: 2px 0 0; }
+.rv-dialog .opt.dis { color: var(--dim); }
+.rv-dialog .opt .d { grid-column: 2; color: var(--dim); font-size: 11.5px; }
+.rv-dialog .acts { display: flex; gap: 8px; justify-content: flex-end; }
+
 
 /* ---------- app shell (replaces the mockup's fake window) ---------- */
 html, body { height: 100%; }
@@ -474,6 +559,7 @@ body { padding: 0 !important; overflow: hidden; }
 .doc input[type="checkbox"] { margin-right: 6px; }
 .docfile + .docfile { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
 .docfile-name { font-family: var(--mono); font-size: 11.5px; color: var(--dim); margin-bottom: 6px; }
+.doc h2.rv-blk > .rv-gut { top: 14px; }
 
 /* ---------- empty state ---------- */
 .empty-state { max-width: 460px; margin: 14vh auto 0; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
@@ -491,9 +577,333 @@ body { padding: 0 !important; overflow: hidden; }
     <aside class="side" id="side"></aside>
     <main class="main" id="main"></main>
   </div>
+  <div id="rvbar"></div>
 </div>
 <div id="modal" hidden></div>
+<div id="rvdialog"></div>
 <div class="toast" id="toast"></div>
+<script>// Review layer (User Story 10): PR review threads on the rendered Spec Kit documents.
+// One source for the mockups and the app. The page supplies a backend: sample data in
+// the mockups, Tauri commands in the app. Every backend call returns a fresh status:
+// { feature, checks, read, write, message, login, branch, cr, files, threads }.
+function createReview(cfg) {
+  const { backend, esc, toast, rerender, openTab } = cfg;
+  const S = new Map(), loading = new Set(), fetchedAt = new Map();
+  let counts = {}, cur = { f: null, tab: null }, refetchTimer = null;
+  const st = { sel: null, draft: "", summary: "", filter: "open", collapsed: new Set(), dialog: false, confirmDiscard: false, busy: false, jump: null };
+
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  const lines = (a, b) => a === b ? `line ${a}` : `lines ${a}–${b}`;
+  const tabOf = p => p.includes("/") ? p.split("/")[0] : p;
+  const md1 = s => esc(s || "").replace(/`([^`]+)`/g, "<code>$1</code>");
+  const when = iso => { const d = new Date(iso); return isNaN(d) ? esc(iso || "") : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); };
+  const ini = u => esc((u || "?").slice(0, 2).toUpperCase());
+  const fileOf = (s, p) => s?.files?.find(x => x.path === p);
+  const openN = s => (s?.threads || []).filter(t => t.state === "open").length;
+  const pendingN = s => (s?.threads || []).flatMap(t => t.comments).filter(c => c.pending).length;
+  const thread = id => (S.get(cur.f?.id)?.threads || []).find(t => t.id === id);
+  const range = t => [t.start ?? t.end, t.end ?? t.start];
+
+  async function load(f, force) {
+    if (!f || loading.has(f.id)) return;
+    loading.add(f.id);
+    try {
+      const s = await backend.status(f.id, f.branch || null, !!force);
+      S.set(f.id, s);
+      if (s.read) counts[f.id] = openN(s);
+      if (force) toast(s.message ? "Still not ready: " + md1(s.message) : "GitHub checks passed");
+    } catch (e) {
+      S.set(f.id, { feature: f.id, checks: [], read: false, write: false, message: String(e), files: [], threads: [] });
+    } finally {
+      fetchedAt.set(f.id, Date.now());
+      loading.delete(f.id);
+      rerender();
+    }
+  }
+
+  async function loadCounts() {
+    try { counts = (await backend.counts()) || {}; } catch { counts = {}; }
+    rerender();
+  }
+
+  // Files changed on disk: drop stale statuses. Re-check the open spec, at most every 20 s.
+  function invalidate() {
+    for (const k of [...S.keys()]) if (k !== cur.f?.id) S.delete(k);
+    const f = cur.f;
+    if (!f) return;
+    const wait = Math.max(0, 20000 - (Date.now() - (fetchedAt.get(f.id) || 0)));
+    clearTimeout(refetchTimer);
+    refetchTimer = setTimeout(() => { if (cur.f?.id === f.id) load(f); }, wait);
+  }
+
+  function reset() { S.clear(); counts = {}; st.sel = null; st.draft = ""; st.dialog = false; }
+
+  // ---------- pieces the page places ----------
+  function chip(f) {
+    const s = S.get(f.id);
+    if (s?.cr) {
+      const c = s.cr, n = s.read ? openN(s) : null;
+      return `<a class="rv-chip" href="${esc(c.url)}" data-rv-url="${esc(c.url)}"><span class="rv-dot ${esc(c.state)}"></span>PR #${c.number} · ${c.draft ? "Draft" : c.state[0].toUpperCase() + c.state.slice(1)}${n != null ? ` · ${plural(n, "open thread")}` : ""}</a>`;
+    }
+    return counts[f.id] ? `<span class="rv-chip"><span class="rv-dot open"></span>${plural(counts[f.id], "open thread")}</span>` : "";
+  }
+
+  function line(f, tab) {
+    const s = S.get(f.id);
+    if (!s) return `<div class="rv-line wait"><span class="rv-lamp"></span><span class="msg">Checking GitHub…</span></div>`;
+    let ok = !s.message, msg;
+    if (ok) {
+      const files = s.files.filter(x => tabOf(x.path) === tab), off = files.filter(x => !x.canComment);
+      msg = `Commenting as <b>${esc(s.login)}</b> on PR #${s.cr.number}.`;
+      if (files.length && off.length === files.length) { ok = false; msg = md1(off[0].reason); }
+      else if (off.length) msg += ` ${plural(off.length, "file")} here can't take comments: ${md1(off[0].reason)}`;
+    } else msg = md1(s.message);
+    return `<div class="rv-line ${ok ? "" : "off"}"><span class="rv-lamp"></span><span class="msg">${msg}</span><button class="btn sm" data-rv-check ${loading.has(f.id) ? "disabled" : ""}>${loading.has(f.id) ? "Checking…" : "Check again"}</button></div>`;
+  }
+
+  function tabCount(f, tab) {
+    const s = S.get(f.id);
+    const n = (s?.threads || []).filter(t => t.state === "open" && tabOf(t.path) === tab).length;
+    return n ? `<span class="rv-cnt">${n}</span>` : "";
+  }
+
+  // The documents card next to the Conversations list (when threads could be read).
+  function grid(f, docsHtml) {
+    const s = S.get(f.id);
+    if (!s?.read) return docsHtml;
+    const by = { open: [], pending: [], resolved: [], outdated: [] };
+    s.threads.forEach(t => by[t.state]?.push(t));
+    const lbl = { open: "Open", pending: "Pending", resolved: "Resolved", outdated: "Outdated" };
+    const list = by[st.filter].sort((a, b) => a.path.localeCompare(b.path) || (a.end || 0) - (b.end || 0));
+    const item = t => {
+      const c = t.comments[0] || {}, [a, b] = range(t);
+      const placed = fileOf(s, t.path)?.inSync && t.state !== "outdated";
+      return `<button class="rv-ci" data-rv-jump="${esc(t.id)}"><div class="top"><span class="rv-av ${c.author === s.login ? "me" : ""}">${ini(c.author)}</span><b>${esc(c.author)}</b><span class="mono dim">${esc(t.path)}${a ? ":" + a : ""}</span>${t.comments.length > 1 ? `<span class="dim r">${t.comments.length - 1} repl${t.comments.length === 2 ? "y" : "ies"}</span>` : ""}</div>
+        <div class="ex">${esc(c.text ?? c.body)}</div>${t.was ? `<div class="was">The line this was on has changed. It said: ${esc(t.was)}</div>` : !placed ? `<div class="was">Not shown in the document: the file on disk differs from PR #${s.cr.number}.</div>` : ""}</button>`;
+    };
+    return `<div class="rv-grid">${docsHtml}<div class="card panel rv-convo"><header>Conversations<span class="r"><a href="${esc(s.cr.url)}" data-rv-url="${esc(s.cr.url)}">PR #${s.cr.number} ↗</a></span></header>
+      <div class="rv-filters">${Object.keys(lbl).map(k => `<button class="${st.filter === k ? "on" : ""}" data-rv-filter="${k}">${lbl[k]} · ${by[k].length}</button>`).join("")}</div>
+      ${list.length ? list.map(item).join("") : `<div class="none-msg">No ${lbl[st.filter].toLowerCase()} threads on this spec's files.</div>`}</div></div>`;
+  }
+
+  // ---------- threads and composer inside the document ----------
+  function commentHtml(c, s, t) {
+    const mine = c.pending && c.author === s.login;
+    return `<div class="rv-cm"><span class="rv-av ${c.author === s.login ? "me" : ""}">${ini(c.author)}</span><div class="b"><div class="who">${esc(c.author)}<span class="dim">${c.pending ? "Pending, only you can see this" : when(c.createdAt)}</span>
+      ${mine ? `<span class="acts"><button class="rv-link" data-rv-edit="${esc(c.id)}" data-rv-thread="${esc(t.id)}">Edit</button><button class="rv-link" data-rv-del="${esc(c.id)}">Delete</button></span>` : ""}</div>
+      <div class="tx">${c.html ?? esc(c.body)}</div></div></div>`;
+  }
+  function threadHtml(t, s) {
+    const col = st.collapsed.has(t.id) || (t.state === "resolved" && !st.collapsed.has("!" + t.id));
+    const [a, b] = range(t);
+    const chipH = t.state === "resolved" ? `<span class="chip rv-ok">Resolved${t.resolvedBy ? " by " + esc(t.resolvedBy) : ""}</span>` : t.state === "pending" ? `<span class="chip rv-pend">Pending review</span>` : `<span class="chip calm">Open</span>`;
+    const where = t.fileLevel ? "whole file" : lines(a, b);
+    const head = `<div class="th" ${col ? `data-rv-expand="${esc(t.id)}"` : ""}>${chipH}<span class="mono dim">${where}</span><span class="dim r">${col ? `${plural(t.comments.length, "comment")} · show` : plural(t.comments.length, "comment")}</span></div>`;
+    if (col) return `<div class="rv-thread collapsed" id="rvt-${esc(t.id)}">${head}</div>`;
+    const off = !s.write || st.busy, url = t.comments.find(c => c.url)?.url;
+    const replying = st.sel?.reply === t.id || (st.sel?.edit && st.sel.thread === t.id);
+    const acts = t.state === "pending" ? "" : `<div class="tacts"><button class="btn sm" data-rv-reply="${esc(t.id)}" ${off ? "disabled" : ""}>Reply</button><button class="btn sm" data-rv-resolve="${esc(t.id)}" ${off ? "disabled" : ""}>${t.state === "resolved" ? "Unresolve" : "Resolve"}</button><button class="btn sm" data-rv-agent="${esc(t.id)}" title="Copies a prompt for your coding agent">Copy for agent</button>${url ? `<a class="btn sm" href="${esc(url)}" data-rv-url="${esc(url)}">View on GitHub ↗</a>` : ""}${t.state === "resolved" ? `<button class="btn sm" data-rv-collapse="${esc(t.id)}">Collapse</button>` : ""}</div>`;
+    return `<div class="rv-thread ${t.state}" id="rvt-${esc(t.id)}">${head}${t.comments.map(c => commentHtml(c, s, t)).join("")}${replying ? composerHtml(s) : acts}</div>`;
+  }
+  function composerHtml(s) {
+    const x = st.sel, hasPending = !!s.cr?.pendingReview;
+    const label = x.edit ? "Edit your pending comment" : x.reply ? "Reply" : `Comment on <span class="mono">${esc(x.path)}</span> ${lines(x.a, x.b)} · shift-click another <b>+</b> to extend`;
+    const fs = fileOf(s, x.path);
+    const fileLevel = !x.reply && !x.edit && fs && !fs.allLines && !(fs.ranges || []).some(r => r[0] <= x.a && x.b <= r[1]);
+    const btns = x.edit ? `<button class="btn primary" data-rv-send="edit">${st.busy ? "Saving…" : "Save"}</button>`
+      : x.reply ? `<button class="btn primary" data-rv-send="reply">${st.busy ? "Posting…" : hasPending ? "Add reply to review" : "Reply"}</button>`
+      : `${hasPending ? "" : `<button class="btn" data-rv-send="now">Comment now</button>`}<button class="btn primary" data-rv-send="review">${st.busy ? "Saving…" : hasPending ? "Add to review" : "Start a review"}</button>`;
+    return `<div class="rv-composer"><div class="lbl">${label}</div>${fileLevel ? `<div class="lbl warn">These lines aren't in the PR's diff, so this goes on the whole file, starting "${lines(x.a, x.b).replace(/^l/, "L")}:".</div>` : ""}
+      <textarea id="rv-draft" placeholder="${x.reply ? "Write a reply" : "Leave a comment. Markdown works. Ctrl+Enter to save."}">${esc(st.draft)}</textarea>
+      <div class="row2"><button class="btn" data-rv-cancel>Cancel</button><span class="sp"></span>${btns}</div></div>`;
+  }
+
+  function blocksOf(container) {
+    const out = [];
+    for (const el of container.children) {
+      if (!el.dataset?.sourcepos) continue;
+      if (el.tagName === "UL" || el.tagName === "OL") {
+        for (const li of el.children) if (li.dataset?.sourcepos) out.push(li);
+      } else out.push(el);
+    }
+    return out.map(el => { const m = el.dataset.sourcepos.match(/^(\d+):\d+-(\d+):\d+/); return m && { el, a: +m[1], b: +m[2] }; }).filter(Boolean);
+  }
+  const anchor = el => /^(TABLE|PRE|HR)$/.test(el.tagName) ? (el.parentElement.classList.contains("rv-wrap") ? el.parentElement : wrap(el)) : el;
+  function wrap(el) { const w = document.createElement("div"); w.className = "rv-wrap"; el.replaceWith(w); w.appendChild(el); return w; }
+  const after = (el, html) => el.tagName === "LI" ? el.insertAdjacentHTML("beforeend", html) : el.insertAdjacentHTML("afterend", html);
+
+  function decorate(doc, f, s) {
+    doc.querySelectorAll(".rv-gut,.rv-thread,.rv-composer,.rv-filethreads").forEach(e => e.remove());
+    doc.querySelectorAll(".rv-blk").forEach(e => e.classList.remove("rv-blk", "rv-sel", "rv-flash"));
+    doc.classList.add("rv-on");
+    const parts = [...doc.querySelectorAll("section.docfile[data-path]")];
+    const units = parts.length ? parts.map(p => [p, p.dataset.path]) : [[doc, doc.dataset.file || cur.tab]];
+    for (const [box, path] of units) {
+      const fs = fileOf(s, path), can = !!fs?.canComment && s.write;
+      const why = can ? "" : (fs?.reason || s.message || "Commenting is off for this file.").replace(/`/g, "");
+      const bs = blocksOf(box);
+      for (const k of bs) {
+        const a = anchor(k.el);
+        a.classList.add("rv-blk");
+        const sel = st.sel && !st.sel.reply && !st.sel.edit && st.sel.path === path && k.a <= st.sel.b && k.b >= st.sel.a;
+        if (sel) a.classList.add("rv-sel");
+        a.insertAdjacentHTML("afterbegin", `<span class="rv-gut"><span class="ln">${k.a}</span><button class="rv-add ${can ? "" : "off"}" data-rv-add="${esc(path)}" data-a="${k.a}" data-b="${k.b}" title="${esc(can ? "Comment on " + lines(k.a, k.b) : why)}" aria-label="${esc(can ? "Comment on " + lines(k.a, k.b) : why)}">+</button></span>`);
+      }
+      if (!s.read) continue;
+      const ts = s.threads.filter(t => t.path === path && t.state !== "outdated");
+      const fileLevel = ts.filter(t => t.fileLevel || t.end == null);
+      if (fileLevel.length) {
+        const top = box.querySelector(":scope > .docfile-name");
+        const html = `<div class="rv-filethreads">${fileLevel.map(t => threadHtml(t, s)).join("")}</div>`;
+        top ? top.insertAdjacentHTML("afterend", html) : box.insertAdjacentHTML("afterbegin", html);
+      }
+      if (fs?.inSync) {
+        for (const t of ts.filter(t => !t.fileLevel && t.end != null)) {
+          const k = bs.filter(k => k.a <= t.end).at(-1) || bs[0];
+          if (k) after(anchor(k.el), threadHtml(t, s));
+        }
+      }
+      if (st.sel && !st.sel.reply && !st.sel.edit && st.sel.path === path) {
+        const k = bs.filter(k => k.a <= st.sel.b).at(-1);
+        if (k) after(anchor(k.el), composerHtml(s));
+      }
+    }
+  }
+
+  function barHtml(f, s) {
+    const n = pendingN(s);
+    if (!s?.read || !n) return "";
+    if (st.confirmDiscard) return `<div class="rv-bar"><span>Discard ${plural(n, "pending comment")}? They have not been posted.</span><span class="sp"></span><button class="btn" data-rv-keep>Keep</button><button class="btn primary" data-rv-discard-yes>Discard</button></div>`;
+    return `<div class="rv-bar"><span class="chip rv-pend">Pending review</span><span>${plural(n, "comment")} only you can see. Nothing is posted until you submit.</span><span class="sp"></span><button class="btn" data-rv-discard ${st.busy ? "disabled" : ""}>Discard</button><button class="btn primary" data-rv-submit ${s.write && !st.busy ? "" : "disabled"}>Submit review</button></div>`;
+  }
+  function dialogHtml(f, s) {
+    const pend = s.threads.flatMap(t => t.comments.filter(c => c.pending).map(c => [t, c]));
+    const code = (s.cr.changedFiles || 0) - (s.cr.specFiles || 0);
+    const why = code > 0 ? `This PR also changes ${plural(code, "file")} outside <span class="mono">specs/</span>, so a verdict here would cover code you haven't reviewed.` : "Verdicts stay on GitHub.";
+    return `<div class="rv-scrim" data-rv-scrim><div class="rv-dialog" role="dialog" aria-modal="true" aria-labelledby="rv-dh">
+      <h2 id="rv-dh">Submit review on PR #${s.cr.number}</h2>
+      <ul>${pend.map(([t, c]) => `<li><span class="mono">${esc(t.path)}${t.end ? ":" + t.end : ""}</span> ${esc((c.text ?? c.body).slice(0, 80))}${(c.text ?? c.body).length > 80 ? "…" : ""}</li>`).join("")}</ul>
+      <label for="rv-summary" class="dim">Summary (optional)</label>
+      <textarea id="rv-summary" placeholder="Overall thoughts on the spec">${esc(st.summary)}</textarea>
+      <label class="opt"><input type="radio" name="rv-ev" checked> <b>Comment</b><span class="d">Post the comments without a verdict.</span></label>
+      <label class="opt dis"><input type="radio" name="rv-ev" disabled> <b>Approve</b><span class="d">Not offered in Spec Deck. ${why} Approve on GitHub.</span></label>
+      <label class="opt dis"><input type="radio" name="rv-ev" disabled> <b>Request changes</b><span class="d">Not offered in Spec Deck, for the same reason. Use GitHub.</span></label>
+      <div class="acts"><button class="btn" data-rv-close>Cancel</button><button class="btn primary" data-rv-post ${st.busy ? "disabled" : ""}>${st.busy ? "Posting…" : `Post ${plural(pend.length, "comment")}`}</button></div></div></div>`;
+  }
+
+  // Called after every page render (f = null when no spec is shown).
+  function afterRender(f, tab) {
+    cur = { f, tab };
+    const bar = document.getElementById("rvbar"), dlg = document.getElementById("rvdialog");
+    if (!f) { if (bar) bar.innerHTML = ""; if (dlg) dlg.innerHTML = ""; return; }
+    const s = S.get(f.id);
+    if (!s && !loading.has(f.id)) load(f);
+    const doc = document.getElementById("doc");
+    if (doc && s) decorate(doc, f, s);
+    if (bar) bar.innerHTML = barHtml(f, s);
+    if (dlg) dlg.innerHTML = st.dialog && s?.cr ? dialogHtml(f, s) : "";
+    const ta = document.getElementById("rv-draft");
+    if (ta) { ta.oninput = e => st.draft = e.target.value; if (!st.dialog) ta.focus({ preventScroll: true }); }
+    const sum = document.getElementById("rv-summary");
+    if (sum) { sum.oninput = e => st.summary = e.target.value; sum.focus(); }
+    if (st.jump) {
+      const el = document.getElementById("rvt-" + st.jump);
+      if (el) {
+        st.jump = null;
+        el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        el.classList.add("rv-flash");
+      }
+    }
+  }
+
+  async function run(op, done) {
+    const f = cur.f;
+    if (st.busy || !f) return;
+    st.busy = true; rerender();
+    try {
+      const s = await op(f);
+      S.set(f.id, s); counts[f.id] = openN(s);
+      st.sel = null; st.draft = "";
+      toast(done);
+      return true;
+    } catch (e) { toast(md1(String(e))); return false; }
+    finally { st.busy = false; rerender(); }
+  }
+
+  function agentPrompt(t) {
+    const s = S.get(cur.f.id), [a, b] = range(t);
+    return `Review thread on specs/${cur.f.id}/${t.path}${a ? " " + lines(a, b) : ""} (PR #${s.cr.number}, ${s.cr.url}):\n`
+      + t.comments.map(c => `- ${c.author}: ${(c.text ?? c.body).replace(/\s+/g, " ").trim()}`).join("\n")
+      + `\nUpdate the spec to address it. Don't resolve the thread; a human does that.`;
+  }
+
+  // Returns true when the click was the review layer's.
+  function click(e) {
+    const el = e.target.closest("[data-rv-add],[data-rv-send],[data-rv-cancel],[data-rv-reply],[data-rv-resolve],[data-rv-agent],[data-rv-url],[data-rv-edit],[data-rv-del],[data-rv-expand],[data-rv-collapse],[data-rv-filter],[data-rv-jump],[data-rv-check],[data-rv-submit],[data-rv-discard],[data-rv-discard-yes],[data-rv-keep],[data-rv-close],[data-rv-post],[data-rv-scrim]");
+    if (!el) return false;
+    const d = el.dataset, f = cur.f, s = f && S.get(f.id);
+    if ("rvScrim" in d) { if (e.target === el) { st.dialog = false; rerender(); } return true; }
+    e.preventDefault();
+    if (d.rvUrl) { cfg.openUrl(d.rvUrl); return true; }
+    if ("rvCheck" in d) { load(f, true); rerender(); return true; }
+    if (!s) return true;
+    if (d.rvAdd != null) {
+      if (el.classList.contains("off")) { toast(md1(fileOf(s, d.rvAdd)?.reason || s.message || "Commenting is off for this file.")); return true; }
+      const a = +d.a, b = +d.b;
+      if (e.shiftKey && st.sel && !st.sel.reply && !st.sel.edit && st.sel.path === d.rvAdd) st.sel = { ...st.sel, a: Math.min(st.sel.a, a), b: Math.max(st.sel.b, b) };
+      else { st.sel = { path: d.rvAdd, a, b }; st.draft = ""; }
+      rerender(); return true;
+    }
+    if ("rvCancel" in d) { st.sel = null; st.draft = ""; rerender(); return true; }
+    if (d.rvSend) {
+      const body = st.draft.trim();
+      if (!body) { document.getElementById("rv-draft")?.focus(); return true; }
+      const x = st.sel;
+      if (d.rvSend === "edit") run(f => backend.edit(f.id, x.edit, body), "Pending comment updated");
+      else if (d.rvSend === "reply") run(f => backend.reply(f.id, x.reply, body), s.cr.pendingReview ? "Reply added to your pending review" : `Reply posted to PR #${s.cr.number}`);
+      else {
+        const pending = d.rvSend === "review";
+        run(f => backend.comment(f.id, x.path, x.a, x.b, body, pending), pending ? "Added to your pending review" : `Comment posted to PR #${s.cr.number}`);
+      }
+      return true;
+    }
+    if (d.rvReply) { st.sel = { reply: d.rvReply }; st.draft = ""; rerender(); return true; }
+    if (d.rvEdit) { const c = thread(d.rvThread)?.comments.find(c => c.id === d.rvEdit); st.sel = { edit: d.rvEdit, thread: d.rvThread }; st.draft = c?.text ?? c?.body ?? ""; rerender(); return true; }
+    if (d.rvDel) { run(f => backend.del(f.id, d.rvDel), "Pending comment deleted"); return true; }
+    if (d.rvResolve) { const t = thread(d.rvResolve), res = t.state !== "resolved"; run(f => backend.resolve(f.id, t.id, res), res ? "Thread resolved" : "Thread reopened"); return true; }
+    if (d.rvAgent) { const t = thread(d.rvAgent); cfg.copy(agentPrompt(t)).then(() => toast("Copied a prompt for your coding agent"), err => toast(md1(String(err)))); return true; }
+    if (d.rvExpand) { st.collapsed.delete(d.rvExpand); st.collapsed.add("!" + d.rvExpand); rerender(); return true; }
+    if (d.rvCollapse) { st.collapsed.delete("!" + d.rvCollapse); st.collapsed.add(d.rvCollapse); rerender(); return true; }
+    if (d.rvFilter) { st.filter = d.rvFilter; rerender(); return true; }
+    if (d.rvJump) {
+      const t = thread(d.rvJump); if (!t) return true;
+      st.collapsed.delete(t.id); st.collapsed.add("!" + t.id); st.jump = t.id;
+      const tab = tabOf(t.path);
+      if (tab !== cur.tab) openTab(tab); else rerender();
+      if (!fileOf(s, t.path)?.inSync || t.state === "outdated") { st.jump = null; toast(t.state === "outdated" ? "That line has changed since the comment. Open it on GitHub to see the old version." : `This file on disk differs from PR #${s.cr.number}, so the thread isn't shown in place.`); }
+      return true;
+    }
+    if ("rvSubmit" in d) { st.dialog = true; st.summary = ""; rerender(); return true; }
+    if ("rvClose" in d) { st.dialog = false; rerender(); return true; }
+    if ("rvPost" in d) { const n = pendingN(s); run(f => backend.submit(f.id, st.summary.trim()), `Review posted to PR #${s.cr.number}: ${plural(n, "comment")}`).then(ok => { if (ok) { st.dialog = false; st.filter = "open"; } rerender(); }); return true; }
+    if ("rvDiscard" in d) { st.confirmDiscard = true; rerender(); return true; }
+    if ("rvKeep" in d) { st.confirmDiscard = false; rerender(); return true; }
+    if ("rvDiscardYes" in d) { st.confirmDiscard = false; run(f => backend.discard(f.id), "Pending review discarded"); return true; }
+    return true;
+  }
+
+  function key(e) {
+    if (e.key === "Escape" && (st.dialog || st.sel || st.confirmDiscard)) { st.dialog = false; st.sel = null; st.confirmDiscard = false; rerender(); return true; }
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.id === "rv-draft") {
+      const primary = e.target.closest(".rv-composer")?.querySelector(".btn.primary");
+      primary?.click(); return true;
+    }
+    return false;
+  }
+
+  return { load, loadCounts, invalidate, reset, chip, line, tabCount, grid, afterRender, click, key, counts: () => counts };
+}
+</script>
 <script>
 let DATA = null;
 const STAGES = ["Specified", "Clarified", "Planned", "Tasked", "Analyzed", "Building", "Done"];
@@ -556,18 +966,37 @@ function unfinished(f) {
 let waitingList = [], unfinishedList = [], agentHeavy = [];
 
 
-const NAVS = [["all", "All specs"], ["timeline", "Timeline"], ["waiting", "Waiting on me"], ["unfinished", "Unfinished"], ["agent", "Agent decisions"]];
-let LISTS = { all: [], timeline: [], waiting: [], unfinished: [], agent: [] };
+const NAVS = [["all", "All specs"], ["timeline", "Timeline"], ["waiting", "Waiting on me"], ["unfinished", "Unfinished"], ["agent", "Agent decisions"], ["review", "Open review threads"]];
+let LISTS = { all: [], timeline: [], waiting: [], unfinished: [], agent: [], review: [] };
 const ICONS = {
   all: '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
   timeline: '<path d="M2 4h7M5 8h9M3 12h6"/>',
   waiting: '<circle cx="8" cy="8" r="6"/><path d="M8 5v3.5M8 11h.01"/>',
   unfinished: '<circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor" stroke="none"/>',
   agent: '<path d="M8 2l1.4 4.6L14 8l-4.6 1.4L8 14l-1.4-4.6L2 8l4.6-1.4z"/>',
+  review: '<path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>',
 };
 const icon = k => `<svg viewBox="0 0 16 16" aria-hidden="true">${ICONS[k]}</svg>`;
 const stageCount = s => F.filter(f => f.stage === s).length;
 let cur = null;
+
+// ---------- review threads on GitHub (User Story 10; the layer lives in review-layer.js) ----------
+const RV = createReview({
+  backend: {
+    status: (feature, branch, force) => invoke("review_status", { feature, branch, force }),
+    counts: () => invoke("review_counts"),
+    comment: (feature, file, start, end, body, pending) => invoke("review_comment", { feature, file, start, end, body, pending }),
+    submit: (feature, body) => invoke("review_submit", { feature, body }),
+    discard: feature => invoke("review_discard", { feature }),
+    reply: (feature, thread, body) => invoke("review_reply", { feature, thread, body }),
+    resolve: (feature, thread, resolved) => invoke("review_resolve", { feature, thread, resolved }),
+    edit: (feature, comment, body) => invoke("review_edit", { feature, comment, body }),
+    del: (feature, comment) => invoke("review_delete", { feature, comment }),
+  },
+  esc, toast, rerender: () => render(), openTab: tab => { state.docTab = tab; render(); },
+  copy: text => invoke("copy_text", { text }),
+  openUrl: url => invoke("open_url", { url }),
+});
 
 // ---------- small renderers ----------
 const pill = (s, src) => `<span class="pill ${src === "status" ? "from-status" : ""}" ${src === "status" ? 'title="Stage taken from the spec Status line (no tasks.md)"' : ""} style="color:${STAGE_COLOR[s]};background:color-mix(in srgb, ${STAGE_COLOR[s]} 14%, transparent)">${s}${src === "status" ? "*" : ""}</span>`;
@@ -603,6 +1032,7 @@ function row(f) {
 
 // ---------- sidebar ----------
 function renderSide() {
+  LISTS.review = F.filter(f => RV.counts()[f.id] > 0);
   const navs = NAVS.map(([k, l]) => [k, l, LISTS[k].length]);
   const stageBtn = s => `<button class="${state.stage === s && state.view === "project" ? "on" : ""}" data-stage="${s}"><span class="dot" style="background:${STAGE_COLOR[s]}"></span>${s}<span class="n">${stageCount(s)}</span></button>`;
   document.getElementById("side").innerHTML = `
@@ -917,6 +1347,7 @@ async function loadDoc() {
       const nodes = blocks.map(code => {
         const div = document.createElement("div");
         div.className = "mermaid";
+        div.dataset.sourcepos = code.parentElement.dataset.sourcepos || "";
         div.textContent = code.textContent;
         code.parentElement.replaceWith(div);
         return div;
@@ -924,7 +1355,8 @@ async function loadDoc() {
       await m.run({ nodes });
     } catch (e) { console.warn("mermaid", e); }
   }
-  docCache.set(key, now.innerHTML);
+  docCache.set(key, now.innerHTML); // cached before the review layer decorates it
+  RV.afterRender(byId[feature], file);
 }
 
 function setData(d) {
@@ -934,7 +1366,7 @@ function setData(d) {
   waitingList = F.filter(f => waiting(f).length);
   unfinishedList = F.filter(f => unfinished(f).length || f.stage === "Building");
   agentHeavy = F.filter(f => f.stage !== "Done" && dec(f).agent + dec(f).flagged > 0);
-  LISTS = { all: F, timeline: F.filter(inFlight), waiting: waitingList, unfinished: unfinishedList, agent: agentHeavy };
+  LISTS = { all: F, timeline: F.filter(inFlight), waiting: waitingList, unfinished: unfinishedList, agent: agentHeavy, review: [] };
   cur = d.current && byId[d.current.feature];
   docCache.clear();
 }
@@ -944,6 +1376,8 @@ async function pickProject() {
     const d = await invoke("pick_project");
     if (!d) return; // cancelled
     setData(d);
+    RV.reset();
+    RV.loadCounts();
     Object.assign(state, { stage: null, nav: "all", q: "", tlSel: null, tlCenter: true, modal: null });
     if (location.hash) location.hash = ""; else route();
   } catch (e) {
@@ -1106,7 +1540,7 @@ function renderSpec() {
     <div class="crumbs"><button data-back>‹ ${esc(DATA.project)}</button><span>/</span><span class="mono">${esc(f.ticket)}</span><span>/</span><span class="mono">${esc(f.slug)}</span></div>
     <div class="spechead"><div style="min-width:0;flex:1 1 380px">
         <h1>${esc(f.title)}</h1>
-        <div class="meta">${pill(f.stage, f.stageSource)}<span class="tk">${esc(f.ticket)}</span>${f.branch ? `<span class="mono">⎇ ${esc(f.branch)}</span>` : ""}${f.created ? `<span>Created ${esc(f.created)}</span>` : ""}<span>Last commit ${ago(f.lastCommit)} ago</span>${f.clickup ? `<a href="${esc(f.clickup)}" target="_blank" rel="noopener">ClickUp ↗</a>` : ""}</div>
+        <div class="meta">${pill(f.stage, f.stageSource)}<span class="tk">${esc(f.ticket)}</span>${f.branch ? `<span class="mono">⎇ ${esc(f.branch)}</span>` : ""}${RV.chip(f)}${f.created ? `<span>Created ${esc(f.created)}</span>` : ""}<span>Last commit ${ago(f.lastCommit)} ago</span>${f.clickup ? `<a href="${esc(f.clickup)}" target="_blank" rel="noopener">ClickUp ↗</a>` : ""}</div>
       </div>
       <div class="actions"><button class="btn" data-folder="${esc(f.id)}">Open folder</button>${nextCmd ? `<button class="btn primary" data-copy="${nextCmd} specs/${esc(f.id)}">Copy ${nextCmd}</button>` : ""}</div>
     </div>
@@ -1129,9 +1563,9 @@ function renderSpec() {
       </div>
     </div>
     <div class="card panel sect"><header>Decisions<span class="r">## Clarifications sessions, by who decided</span></header>${decisions}</div>
-    <div class="card panel docs sect"><header>Documents<span class="r">${docs.length} artifacts</span></header>
-      <div class="tabs">${docs.map(x => `<button class="${state.docTab === x ? "on" : ""}" data-doc="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      <div class="body">${docBody}</div></div>`;
+    <div class="sect">${RV.line(f, state.docTab)}${RV.grid(f, `<div class="card panel docs"><header>Documents<span class="r">${docs.length} artifacts</span></header>
+      <div class="tabs">${docs.map(x => `<button class="${state.docTab === x ? "on" : ""}" data-doc="${esc(x)}">${esc(x)}${RV.tabCount(f, x)}</button>`).join("")}</div>
+      <div class="body">${docBody}</div></div>`)}</div>`;
 }
 
 function render() {
@@ -1141,6 +1575,7 @@ function render() {
   state.view === "spec" ? renderSpec() : renderProject();
   if (state.view === "spec") loadDoc();
   renderModal();
+  RV.afterRender(state.view === "spec" ? byId[state.spec] : null, state.docTab);
 }
 
 function toast(html) {
@@ -1149,6 +1584,7 @@ function toast(html) {
 }
 
 document.addEventListener("click", e => {
+  if (RV.click(e)) return;
   const el = e.target.closest("[data-pick],[data-folder],[data-openpath],[data-close],[data-mnav],[data-task],[data-story],[data-tlset],[data-tltoday],[data-tlgroup],[data-zoom],[data-tlsel],[data-open],[data-nav],[data-stage],[data-group],[data-back],[data-toggle-done],[data-phase],[data-sess],[data-dkind],[data-doc],[data-copy],[data-toast]");
   if (!el) return;
   const ds = el.dataset;
@@ -1209,11 +1645,12 @@ function route() {
 }
 addEventListener("hashchange", route);
 document.addEventListener("keydown", e => {
-  if (!state.modal) return;
+  if (!state.modal) return RV.key(e);
   if (e.key === "Escape") { state.modal = null; renderModal(); }
   else if (e.key === "ArrowLeft") stepModal(-1);
   else if (e.key === "ArrowRight") stepModal(1);
 });
+RV.loadCounts();
 // Web links open in the browser, not inside the app.
 document.addEventListener("click", e => {
   const a = e.target.closest("a[href]");
@@ -1226,6 +1663,7 @@ document.addEventListener("click", e => {
 T.event.listen("project-updated", e => {
   const main = document.getElementById("main"), top = main.scrollTop;
   setData(e.payload);
+  RV.invalidate();
   render();
   main.scrollTop = top;
   toast("Updated from disk");
@@ -1233,7 +1671,7 @@ T.event.listen("project-updated", e => {
 (async () => {
   try {
     const d = await invoke("current_project");
-    if (d) setData(d);
+    if (d) { setData(d); RV.loadCounts(); }
   } catch (e) {
     return renderEmpty(String(e));
   }

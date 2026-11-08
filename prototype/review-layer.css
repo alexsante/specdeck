@@ -1,0 +1,84 @@
+/* ---------- review on GitHub (User Story 10); shared by the mockups and the app ---------- */
+.rv-chip { display: inline-flex; gap: 6px; align-items: center; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.5px; color: var(--fg); text-decoration: none; }
+.rv-chip:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); text-decoration: none; }
+.rv-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.rv-dot.merged { background: var(--agent); } .rv-dot.closed { background: var(--dim); }
+.rv-line { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); font-size: 12.5px; flex-wrap: wrap; margin: 14px 0 10px; }
+.rv-line .msg { flex: 1 1 300px; min-width: 0; overflow-wrap: anywhere; }
+.rv-lamp { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+.rv-line.off .rv-lamp { background: var(--warn); } .rv-line.wait .rv-lamp { background: var(--dim); }
+.rv-line code, .rv-composer code, .rv-dialog code, .toast code { font-family: var(--mono); font-size: 11.5px; background: color-mix(in srgb, var(--fg) 8%, transparent); padding: 1px 5px; border-radius: 4px; }
+.rv-cnt { margin-left: 6px; font-family: var(--sans); font-size: 10.5px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--fg); }
+.rv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+.rv-grid > * { min-width: 0; }
+@container (max-width: 980px) { .rv-grid { grid-template-columns: 1fr; } .rv-convo { position: static !important; } }
+.rv-convo { position: sticky; top: 10px; }
+.rv-convo header a { font-weight: 400; }
+.rv-filters { display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.rv-filters button { all: unset; cursor: pointer; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: var(--dim); }
+.rv-filters button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--fg); font-weight: 600; }
+.rv-ci { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: none; padding: 9px 12px; cursor: pointer; font-size: 12px; color: var(--fg); }
+.rv-ci:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.rv-ci .top { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; min-width: 0; }
+.rv-ci .top .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.rv-ci .r, .rv-thread .r { margin-left: auto; white-space: nowrap; }
+.rv-ci .ex { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.rv-ci .was { margin-top: 5px; font-size: 11px; color: var(--dim); border-left: 2px solid var(--line); padding-left: 7px; overflow-wrap: anywhere; }
+.rv-ci .rv-av { width: 18px; height: 18px; font-size: 9px; }
+
+/* the document: a gutter with line numbers and a + per block */
+.rv-on { padding-left: 46px !important; }
+.rv-on > ul, .rv-on > ol, .rv-on > section > ul, .rv-on > section > ol { padding-left: 22px; }
+.rv-blk { position: relative; }
+.rv-gut { position: absolute; left: -46px; top: 1px; width: 38px; height: 20px; display: flex; justify-content: flex-end; align-items: center; }
+li.rv-blk > .rv-gut { left: -68px; }
+.rv-gut .ln { font-family: var(--mono); font-size: 10.5px; color: var(--dim); opacity: .55; font-variant-numeric: tabular-nums; user-select: none; font-weight: 400; }
+.rv-add { position: absolute; right: 0; top: 1px; width: 18px; height: 18px; border-radius: 5px; border: 0; background: var(--accent); color: #fff; font-size: 14px; line-height: 18px; padding: 0; cursor: pointer; opacity: 0; font-weight: 600; }
+.rv-blk:hover > .rv-gut .rv-add, .rv-add:focus-visible { opacity: 1; }
+.rv-blk:hover > .rv-gut .ln { opacity: 0; }
+.rv-add.off { background: var(--line); color: var(--dim); cursor: not-allowed; }
+.rv-sel { background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: -46px 0 0 color-mix(in srgb, var(--accent) 10%, transparent); }
+.rv-sel > .rv-gut .ln { opacity: 1; color: var(--accent); }
+.rv-flash { animation: rv-flash 1.4s ease-out; }
+@keyframes rv-flash { from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 55%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .rv-flash { animation: none; } }
+
+.rv-thread, .rv-composer { margin: 6px 0 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); font-size: 12.5px; line-height: 1.45; list-style: none; }
+.rv-thread.resolved { opacity: .8; }
+.rv-thread > .th { display: flex; gap: 8px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.rv-thread.collapsed > .th { border-bottom: 0; cursor: pointer; }
+.rv-cm { padding: 9px 12px; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 0 9px; }
+.rv-cm + .rv-cm { border-top: 1px solid var(--line); }
+.rv-cm .who { font-weight: 600; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.rv-cm .who .dim { font-weight: 400; font-size: 11.5px; }
+.rv-cm .who .acts { margin-left: auto; display: flex; gap: 8px; font-weight: 400; }
+.rv-cm .tx { margin-top: 2px; overflow-wrap: anywhere; }
+.rv-cm .tx > :first-child { margin-top: 0; } .rv-cm .tx > :last-child { margin-bottom: 0; }
+.rv-cm .tx p { margin: 0 0 6px; }
+.rv-cm .tx pre { overflow-x: auto; }
+.rv-av { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; background: var(--info); flex: none; }
+.rv-av.me { background: var(--accent); }
+.rv-thread .tacts { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.rv-thread .tacts a.btn { text-decoration: none; color: var(--fg); }
+.chip.rv-ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.chip.rv-pend { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.rv-composer { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.rv-thread .rv-composer { margin: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+.rv-composer .lbl { font-size: 11.5px; color: var(--dim); }
+.rv-composer .lbl.warn { color: var(--warn); }
+.rv-composer textarea, .rv-dialog textarea { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; min-height: 68px; resize: vertical; width: 100%; box-sizing: border-box; }
+.rv-composer .row2 { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.rv-composer .sp, .rv-bar .sp { flex: 1; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.rv-link { all: unset; cursor: pointer; color: var(--accent); font-size: 11.5px; }
+
+.rv-bar { position: sticky; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 10px 22px; border-top: 1px solid var(--line); background: var(--surface-2); flex-wrap: wrap; font-size: 12.5px; z-index: 5; }
+.rv-scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .45); display: grid; place-items: center; padding: 16px; z-index: 30; }
+.rv-dialog { width: min(540px, 100%); max-height: calc(100% - 32px); overflow-y: auto; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 24px 60px -20px var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 12px; font-size: 12.5px; }
+.rv-dialog h2 { margin: 0; font-size: 16px; }
+.rv-dialog ul { margin: 0; padding-left: 18px; color: var(--dim); }
+.rv-dialog .opt { display: grid; grid-template-columns: 18px 1fr; gap: 2px 8px; align-items: start; }
+.rv-dialog .opt input { margin: 2px 0 0; }
+.rv-dialog .opt.dis { color: var(--dim); }
+.rv-dialog .opt .d { grid-column: 2; color: var(--dim); font-size: 11.5px; }
+.rv-dialog .acts { display: flex; gap: 8px; justify-content: flex-end; }
