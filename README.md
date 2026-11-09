@@ -4,11 +4,19 @@ A read-only macOS command center for projects that use [Spec Kit](https://github
 
 Status: specified; a Rust + Tauri proof of concept runs on Linux (branch `tauri-poc`). See `HANDOFF.md` and `specs/001-command-center/spec.md`.
 
-## Run the proof of concept
+## Build and run
+
+The Makefile works on Linux, macOS, and Windows (from Git Bash or MSYS2):
 
 ```sh
-cargo run -p spec-deck -- /path/to/spec-kit-repo
+make doctor                               # check the toolchain and system libraries
+make run REPO=/path/to/spec-kit-repo      # build and open a project (REPO optional)
+make test                                 # all crates' tests
+make parity REPO=/path/to/spec-kit-repo   # Rust parser vs prototype/extract.py
+make bundle                               # installable package (needs: make tauri-cli)
 ```
+
+`make` alone lists every target. On Linux, `make run SAFE_GL=1` works around a blank window on some GPU and Wayland setups.
 
 ## Prototype
 
