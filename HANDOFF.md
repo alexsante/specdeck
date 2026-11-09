@@ -41,6 +41,7 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 | "Needs attention" is split into **Waiting on me** and **Unfinished** | Human-confirmed. Waiting on me = only a human can unblock (open markers, latest-pass FAIL or open HIGH/CRITICAL, flagged conflicts); includes Done specs. Unfinished = not fully planned or partially built, with "Stalled" (14 days) and "Rest deferred". |
 | Timeline bars run from `**Created**:` to merge (or to today) | proj-nava squash-merges, so per-day commit activity on main is useless. |
 | Links between specs come from ticket numbers in `spec.md`, drawn only for the selected bar | 383 references across 76 specs; drawing all is unreadable. |
+| Releases (2026-11-09): Linux x64 (.AppImage, .deb, .rpm), macOS universal (.dmg), Windows x64 (.msi, .exe); unsigned; a tag `vX.Y.Z` builds a draft release that the human publishes | Human decision. Linux ARM needs paid runners while the repo is private. Signing waits until the tool is shared (see "Personal tool first"). Draft first so "Latest" only moves on purpose. |
 | Specs on unchecked-out branches are v2 | Read them later with `git ls-tree` / `git show branch:path`. |
 
 ## The target format is not stock Spec Kit

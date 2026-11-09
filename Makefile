@@ -11,7 +11,7 @@
 # build target regenerates it first when the template or the review layer changed.
 
 .DEFAULT_GOAL := help
-.PHONY: help doctor ui build release run run-release dev bundle tauri-cli icons \
+.PHONY: help doctor ui build release run run-release dev bundle tauri-cli icons version \
         test test-core parity dump mockup fmt lint clean
 
 # ---------------------------------------------------------------- platform
@@ -126,6 +126,17 @@ bundle: ui ## Installable package for this platform (.deb/.rpm/.AppImage, .app/.
 	@$(CARGO) tauri --version >/dev/null 2>&1 || { echo "Install the Tauri CLI first: make tauri-cli"; exit 1; }
 	cd app/src-tauri && $(CARGO) tauri build
 	@echo "Packages are in target/release/bundle/"
+
+# ---------------------------------------------------------------- releases (.github/workflows/release.yml)
+VERSION := $(shell sed -n '/^\[workspace.package\]/,/^\[/s/^version *= *"\(.*\)"/\1/p' Cargo.toml)
+
+version: ## Set the app version (V=X.Y.Z), then print the commands that publish it
+	@if ! echo "$(V)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$$'; then echo "Current version: $(VERSION). Set a new one: make version V=X.Y.Z"; exit 2; fi
+	@sed -i.bak '/^\[workspace.package\]/,/^\[/s/^version *= *".*"/version = "$(V)"/' Cargo.toml && rm -f Cargo.toml.bak
+	@$(CARGO) metadata --format-version 1 >/dev/null 2>&1 || { echo "cargo could not update Cargo.lock; run cargo build to see why"; exit 1; }
+	@echo "Version $(VERSION) -> $(V) in Cargo.toml and Cargo.lock. To release it:"
+	@echo "  git commit -am 'Release v$(V)' && git tag v$(V) && git push origin HEAD v$(V)"
+	@echo "GitHub Actions then builds every installer into a draft release to check and publish."
 
 icons: ## Regenerate every icon size from app/src-tauri/icons/icon.png
 	@$(CARGO) tauri --version >/dev/null 2>&1 || { echo "Install the Tauri CLI first: make tauri-cli"; exit 1; }
