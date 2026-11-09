@@ -1,0 +1,617 @@
+<title>Spec Deck Worktrees</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Worktree support mockup. Same tokens and components as prototype/template.html (dark-first, one violet accent,
+   gradient only for work happening now). New pieces: worktree chips, the worktree scope in the sidebar,
+   "Agents at work" lanes, the Worktrees view and the spec's Copies switcher. Sample data, not proj-nava. */
+:root {
+  color-scheme: dark;
+  --bg: #0e0e10; --surface: #161618; --surface-2: #1c1c1f; --card: #1f1f23; --fg: #ececf0; --dim: #8d8d97; --line: #2a2a30;
+  --accent: #8b7cf6; --ok: #3ecf8e; --warn: #f0b24a; --bad: #ff6767; --info: #7aa2ff; --agent: #b49cff;
+  --btn-bg: #f2f2f5; --btn-fg: #111114; --hatch: rgb(255 255 255 / .05); --shadow: rgb(0 0 0 / .45);
+  --grad: linear-gradient(100deg, #5d74f2 0%, #9a85f2 32%, #e99bc8 68%, #f1c48e 100%);
+  --r: 12px; --r-sm: 8px;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #e9e9ee; --surface: #ffffff; --surface-2: #f5f5f8; --card: #ffffff; --fg: #1b1b20; --dim: #696974; --line: #e0e0e7;
+  --accent: #6a5ae0; --ok: #1f9d55; --warn: #b26a00; --bad: #d23b3b; --info: #2f6fed; --agent: #7a4fd6;
+  --btn-bg: #1b1b20; --btn-fg: #ffffff; --hatch: rgb(0 0 0 / .05); --shadow: rgb(0 0 0 / .12); color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #e9e9ee; --surface: #ffffff; --surface-2: #f5f5f8; --card: #ffffff; --fg: #1b1b20; --dim: #696974; --line: #e0e0e7;
+  --accent: #6a5ae0; --ok: #1f9d55; --warn: #b26a00; --bad: #d23b3b; --info: #2f6fed; --agent: #7a4fd6;
+  --btn-bg: #1b1b20; --btn-fg: #ffffff; --hatch: rgb(0 0 0 / .05); --shadow: rgb(0 0 0 / .12); color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--sans); color: var(--fg); background: var(--bg); font-size: 13px; line-height: 1.4;
+  padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none !important; } }
+h1, h2, h3 { text-wrap: balance; }
+button { font: inherit; color: inherit; }
+a { color: var(--accent); text-decoration: none; }
+.mono { font-family: var(--mono); font-size: 11.5px; }
+.dim { color: var(--dim); }
+
+.win { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+  box-shadow: 0 1px 2px var(--shadow), 0 24px 60px -20px var(--shadow); container-type: inline-size; max-width: 1360px; margin: 0 auto; }
+.titlebar { height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); position: relative; }
+.lights { display: flex; gap: 7px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; display: block; background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+.titlebar .ttl { position: absolute; left: 0; right: 0; text-align: center; font-weight: 600; color: var(--dim); pointer-events: none; font-size: 12.5px; }
+.shell { display: grid; grid-template-columns: 228px 1fr; min-height: 780px; }
+
+/* sidebar */
+.side { border-right: 1px solid var(--line); background: var(--surface-2); padding: 12px 8px; display: flex; flex-direction: column; gap: 14px; }
+.side h6 { margin: 0 8px 4px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.side h6 .new { text-transform: none; letter-spacing: 0; font-weight: 700; font-size: 9.5px; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 4px; padding: 0 5px; }
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav button { all: unset; display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 12.5px; min-width: 0; }
+.nav button:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.nav button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); font-weight: 600; }
+.nav .n { margin-left: auto; color: var(--dim); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 400; flex: none; }
+.nav .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.nav .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav svg { width: 14px; height: 14px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.proj .ic { width: 18px; height: 18px; border-radius: 5px; background: var(--grad); color: white; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex: none; }
+.proj .ic.plain { background: none; color: var(--dim); }
+.side .open { all: unset; cursor: pointer; padding: 5px 8px; color: var(--dim); font-size: 12px; }
+.nav .wt-btn { flex-direction: column; align-items: stretch !important; gap: 1px !important; }
+.nav .wt-btn .l1 { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.nav .wt-btn .l2 { padding-left: 15px; font-size: 11px; color: var(--dim); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav .wt-btn.gone { opacity: .55; }
+.glyph { width: 8px; height: 8px; border-radius: 2px; flex: none; border: 1.5px solid var(--dim); }
+.glyph.live { border: 0; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+.glyph.mainwt { border-color: var(--fg); background: var(--fg); }
+.dirty { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); flex: none; }
+
+.main { padding: 18px 22px 28px; min-width: 0; }
+@container (max-width: 820px) { .wtsel select { max-width: 100%; } .shell { grid-template-columns: 1fr; min-height: 0; } .shell > .side { display: none; } .compact-nav { display: flex !important; } .main { padding: 14px; } .search { width: 100% !important; } .head .tools { margin-left: 0 !important; width: 100%; flex-wrap: wrap; } }
+.compact-nav { display: none; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.compact-nav select { font: inherit; padding: 5px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--fg); max-width: 100%; }
+.head { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.head h1 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+.head .sub { color: var(--dim); font-size: 12px; margin-top: 2px; }
+.head .tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.search { padding: 6px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font: inherit; width: 200px; }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; padding: 2px; flex-wrap: wrap; }
+.seg button { all: unset; padding: 3px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; color: var(--dim); }
+.seg button.on { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px var(--shadow); font-weight: 600; }
+.card { border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card); }
+.sect { margin-top: 18px; }
+.sect > h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin: 0 0 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sect > h2 .r { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+/* scope bar */
+.scope { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid color-mix(in srgb, var(--info) 35%, var(--line)); background: color-mix(in srgb, var(--info) 7%, var(--card)); margin-bottom: 10px; font-size: 12.5px; }
+.scope b { font-weight: 650; }
+.scope .linkbtn { margin-left: auto; }
+
+/* now working on */
+.now { padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: center; cursor: pointer;
+  background: var(--grad); border: 0; color: #fff; box-shadow: 0 10px 30px -14px #9a85f2; border-radius: var(--r-sm); }
+.now .eyebrow { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: rgb(255 255 255 / .88); font-weight: 700; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.now .pulse { background: #fff; }
+.pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); animation: pulse 2s infinite; flex: none; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.now .t { font-size: 15px; font-weight: 650; text-shadow: 0 1px 2px rgb(0 0 0 / .18); }
+.now .meta { color: rgb(255 255 255 / .92); font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.now .pill, .now .wtchip { color: #fff !important; background: rgb(255 255 255 / .22) !important; border-color: transparent !important; }
+.now .right { grid-row: span 3; text-align: right; min-width: 170px; }
+.now .pct { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.now .prog .track { background: rgb(255 255 255 / .3); } .now .prog .fill { background: #fff; } .now .prog .num { color: #fff; }
+@container (max-width: 600px) { .now { grid-template-columns: 1fr; } .now .right { grid-row: auto; text-align: left; } }
+
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin-top: 8px; }
+.lane { all: unset; cursor: pointer; position: relative; padding: 10px 12px 10px 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card); display: flex; flex-direction: column; gap: 5px; min-width: 0; overflow: hidden; }
+.lane::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--grad); opacity: .85; }
+.lane.idle::before { background: var(--line); }
+.lane:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+.lane .top { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dim); min-width: 0; }
+.lane .top .when { margin-left: auto; font-variant-numeric: tabular-nums; flex: none; }
+.lane .tt { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lane .bot { display: flex; align-items: center; gap: 8px; }
+.lane .bot .prog { flex: 1; }
+
+/* pipeline */
+.pipe { display: grid; grid-template-columns: repeat(7, 1fr) auto; gap: 6px; }
+.pipe > div { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pipe .lbl { font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pipe .cnt { font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; }
+.pipe .cnt small { font-size: 10.5px; font-weight: 600; color: var(--accent); }
+.pipe .bar { height: 3px; border-radius: 2px; }
+@container (max-width: 820px) { .pipe { grid-template-columns: repeat(4, 1fr); } }
+
+/* rows */
+.list { overflow: hidden; }
+.grp { padding: 8px 14px; font-size: 11.5px; font-weight: 600; color: var(--dim); background: var(--surface-2); border-top: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+.grp:first-child { border-top: 0; }
+.grp .n { font-weight: 400; }
+.grp .gp { margin-left: auto; font-weight: 400; }
+.grp .gdot { width: 8px; height: 8px; border-radius: 50%; }
+.row { position: relative; display: grid; grid-template-columns: 54px minmax(0, 1fr) 92px 150px 64px 52px; gap: 12px; align-items: center; padding: 8px 14px; border-top: 1px solid var(--line); cursor: pointer; }
+.row .stripe { position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; }
+.row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.row .tt { font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .why { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; align-items: center; }
+.row .age { color: var(--dim); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+@container (max-width: 980px) { .row { grid-template-columns: 54px minmax(0,1fr) 92px 130px 52px; } .row .c-dec { display: none; } }
+@container (max-width: 600px) { .row { grid-template-columns: 50px minmax(0,1fr) 90px; } .row .c-prog, .row .age { display: none; } }
+
+.tk { font-family: var(--mono); font-size: 11px; color: var(--dim); background: var(--surface-2); border: 1px solid var(--line); padding: 1px 5px; border-radius: 5px; text-align: center; white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; width: fit-content; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.from-status { outline: 1px dashed currentColor; outline-offset: -1px; }
+.chip { font-size: 10.5px; padding: 1px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+.chip.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.chip.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 13%, transparent); }
+.chip.calm { color: var(--info); background: color-mix(in srgb, var(--info) 12%, transparent); }
+.chip.quiet { color: var(--dim); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.wtchip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10.5px; padding: 0 6px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); white-space: nowrap; line-height: 16px; }
+.wtchip svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; flex: none; }
+.wtchip.agent { color: var(--agent); border-color: color-mix(in srgb, var(--agent) 40%, var(--line)); background: color-mix(in srgb, var(--agent) 9%, transparent); }
+.also { font-size: 11px; color: var(--dim); white-space: nowrap; }
+.also b { font-weight: 600; color: var(--fg); }
+.linkish { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--dim); white-space: nowrap; border-radius: 4px; padding: 0 2px; }
+.linkish:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.scope .linkish { font-size: 12px; }
+.wtsel { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.wtsel select { font: inherit; padding: 5px 8px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--surface-2); color: var(--fg); max-width: 260px; }
+.prog { display: flex; align-items: center; gap: 8px; }
+.prog .track { flex: 1; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 9%, transparent); overflow: hidden; }
+.prog .fill { height: 100%; border-radius: 3px; background: var(--accent); }
+.prog .fill.ok { background: var(--ok); }
+.prog .num { font-size: 11.5px; color: var(--dim); font-variant-numeric: tabular-nums; min-width: 42px; text-align: right; }
+.decs { display: flex; gap: 6px; font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.decs span { display: inline-flex; align-items: center; gap: 3px; }
+.decs i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+.notask { font-size: 11.5px; color: var(--dim); }
+.foot { font-size: 11.5px; color: var(--dim); margin: 8px 2px 0; }
+
+/* worktrees view */
+.wts { overflow: hidden; }
+.wt { border-top: 1px solid var(--line); }
+.wt:first-child { border-top: 0; }
+.wt > .wh { display: grid; grid-template-columns: 16px minmax(0, 1.25fr) minmax(0, 1.4fr) 130px 120px 60px; gap: 14px; align-items: center; padding: 11px 14px; cursor: pointer; }
+.wt > .wh:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.wt .nm { font-weight: 600; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.wt .nm span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt .br { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.wt .feat { min-width: 0; }
+.wt .feat .ft { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt .diff { display: flex; gap: 4px; flex-wrap: wrap; }
+.wt .git { font-size: 11.5px; color: var(--dim); display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.wt .git .w { color: var(--warn); }
+.wt .when { color: var(--dim); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.wt .car { color: var(--dim); font-size: 10px; transition: transform .15s; }
+.wt.open .car { transform: rotate(90deg); }
+.wt .wb { display: none; padding: 0 14px 12px 44px; }
+.wt.open .wb { display: block; }
+.wt .path { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.dspec { display: grid; grid-template-columns: 70px 54px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 5px 0; border-top: 1px dashed var(--line); font-size: 12.5px; cursor: pointer; }
+.dspec:first-of-type { border-top: 0; }
+.dspec:hover .t { color: var(--accent); }
+.dspec .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt.gone .wh { opacity: .6; }
+@container (max-width: 980px) { .wt > .wh { grid-template-columns: 16px minmax(0,1fr) minmax(0,1fr) 60px; } .wt .git, .wt .c-diff { display: none; } }
+@container (max-width: 600px) { .wt > .wh { grid-template-columns: 16px minmax(0,1fr) 54px; } .wt .feat { display: none; } .wt .wb { padding-left: 14px; } .dspec { grid-template-columns: 62px minmax(0,1fr); } .dspec .tk, .dspec .pill { display: none; } }
+
+/* spec view */
+.crumbs { display: flex; align-items: center; gap: 6px; color: var(--dim); font-size: 12px; margin-bottom: 10px; }
+.crumbs button { all: unset; cursor: pointer; color: var(--accent); }
+.spechead { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.spechead h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.01em; }
+.spechead .meta { display: flex; gap: 12px; flex-wrap: wrap; color: var(--dim); font-size: 12px; align-items: center; }
+.actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.btn { all: unset; cursor: pointer; padding: 5px 10px; border: 1px solid var(--line); border-radius: 7px; font-size: 12px; background: var(--card); white-space: nowrap; }
+.btn:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+.btn.primary { background: var(--btn-bg); color: var(--btn-fg); border-color: transparent; font-weight: 600; }
+.linkbtn { all: unset; cursor: pointer; color: var(--accent); font-size: 12px; }
+.copies { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.copy { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 3px; padding: 8px 11px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card); min-width: 170px; }
+.copy:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+.copy.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.copy .c1 { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; }
+.copy .c1 .home { margin-left: auto; font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
+.copy .c2 { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--dim); }
+.statusnote { margin-top: 12px; font-size: 12px; color: var(--dim); padding: 7px 10px; border-left: 2px solid var(--accent); background: var(--surface-2); border-radius: 0 6px 6px 0; }
+.statusnote b { color: var(--fg); font-weight: 600; }
+.stepper { display: flex; margin: 18px 0 4px; }
+.step { flex: 1; position: relative; text-align: center; font-size: 11px; color: var(--dim); padding-top: 18px; min-width: 0; }
+.step::before { content: ""; position: absolute; top: 5px; left: 50%; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%; border: 2px solid var(--line); background: var(--card); z-index: 1; box-sizing: border-box; }
+.step::after { content: ""; position: absolute; top: 10px; left: -50%; width: 100%; height: 2px; background: var(--line); }
+.step:first-child::after { display: none; }
+.step.done { color: var(--fg); } .step.done::before { background: var(--ok); border-color: var(--ok); } .step.done::after { background: var(--ok); }
+.step.cur { color: var(--accent); font-weight: 700; } .step.cur::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); } .step.cur::after { background: var(--ok); }
+.ghost { position: absolute; top: 1px; left: 50%; margin-left: -9.5px; width: 19px; height: 19px; border-radius: 50%; border: 1.5px dashed var(--dim); z-index: 2; }
+@container (max-width: 600px) { .step { font-size: 0; } }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.kpi { padding: 10px 12px; }
+.kpi .l { font-size: 11px; color: var(--dim); }
+.kpi .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.kpi .s { font-size: 11.5px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 820px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 14px; margin-top: 18px; align-items: start; }
+@container (max-width: 980px) { .grid2 { grid-template-columns: 1fr; } }
+.panel > header { padding: 10px 14px; border-bottom: 1px solid var(--line); font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel > header .r { margin-left: auto; color: var(--dim); font-weight: 400; font-size: 12px; }
+.files { padding: 4px 0; }
+.file { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 14px; font-size: 12.5px; }
+.file .fn { font-family: var(--mono); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.cmp th, .cmp td { text-align: left; padding: 7px 14px; border-top: 1px solid var(--line); vertical-align: middle; }
+.cmp th { font-size: 11px; color: var(--dim); font-weight: 600; border-top: 0; }
+.cmp td.num { font-variant-numeric: tabular-nums; }
+.cmp .rowh { color: var(--dim); white-space: nowrap; }
+.tblwrap { overflow-x: auto; }
+.nextbox { margin: 12px 14px; padding: 9px 11px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); font-size: 12.5px; }
+.nextbox b { color: var(--accent); }
+.nextbox .mono { display: inline-block; margin-top: 4px; }
+
+/* design notes under the window */
+.notes { max-width: 1360px; margin: 22px auto 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.notes section { padding: 14px 16px; }
+.notes h3 { margin: 0 0 8px; font-size: 13px; }
+.notes ul { margin: 0; padding-left: 18px; color: var(--dim); font-size: 12.5px; display: flex; flex-direction: column; gap: 5px; }
+.notes li b { color: var(--fg); font-weight: 600; }
+.notes code { font-family: var(--mono); font-size: 11.5px; color: var(--fg); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--btn-bg); color: var(--btn-fg); padding: 7px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; box-shadow: 0 6px 20px var(--shadow); }
+</style>
+
+<div class="win">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="ttl">Spec Deck</div></div>
+  <div class="shell"><aside class="side" id="side"></aside><main class="main" id="main"></main></div>
+</div>
+
+<div class="notes">
+  <section class="card">
+    <h3>How worktrees are read</h3>
+    <ul>
+      <li><b>Discovery</b>: <code>git worktree list --porcelain</code> from the opened folder. Read-only, like everything else. Each worktree gets its own file watcher.</li>
+      <li><b>Opens on the folder you opened</b>, at whatever branch it has checked out. The sidebar's Worktrees list and the switcher in the header move to a related worktree; the project then reads as if you had opened that folder.</li>
+      <li><b>Nothing goes unseen</b>: a hint bar counts the specs that exist only in other worktrees, and a row says when another worktree has a different copy of its spec. Both switch on click.</li>
+      <li><b>Now working on</b> shows the viewed worktree's <code>.specify/feature.json</code>. The other worktrees' features appear as cards underneath.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h3>Rules this touches</h3>
+    <ul>
+      <li><b>Waiting on me</b> also counts a Done spec that has uncommitted edits in any worktree (27450 here).</li>
+      <li><b>Timeline</b>: one bar per spec. When copies disagree, the bar follows the copy on the spec's own branch.</li>
+      <li><b>Pull now (FR-070)</b> runs in the worktree being viewed, with the same refusals.</li>
+      <li><b>Review comments (FR-060)</b> compare the file in the worktree that has the PR's branch checked out.</li>
+      <li><b>Prunable worktrees</b> (folder deleted) stay listed and dimmed. The app copies <code>git worktree prune</code>; it never runs it.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h3>Decided 2026-11-09</h3>
+    <ul>
+      <li><b>Default</b>: open on the target folder's own branch, with an option to switch to a related worktree. No combined all-worktrees list.</li>
+      <li><b>Labels</b>: worktrees are named by folder and branch only, whatever tool created them.</li>
+      <li><b>Waiting on me</b>: yes, an uncommitted edit in a worktree puts a Done spec there.</li>
+      <li><b>Timeline</b>: one bar per spec.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const ICON = {
+  grid: '<svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>',
+  tree: '<svg viewBox="0 0 16 16"><circle cx="4" cy="3.5" r="1.6"/><circle cx="4" cy="12.5" r="1.6"/><circle cx="12" cy="6" r="1.6"/><path d="M4 5.1v5.8M12 7.6c0 2.6-4 2.4-7 3.6"/></svg>',
+  clock: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
+  half: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 2v12" /></svg>',
+  line: '<svg viewBox="0 0 16 16"><path d="M2 4h9M2 8h12M2 12h6"/></svg>',
+  branch: '<svg viewBox="0 0 16 16"><circle cx="4" cy="3.5" r="1.6"/><circle cx="4" cy="12.5" r="1.6"/><circle cx="12" cy="6" r="1.6"/><path d="M4 5.1v5.8M12 7.6c0 2.6-4 2.4-7 3.6"/></svg>',
+};
+const STAGES = ["Specified", "Clarified", "Planned", "Tasked", "Analyzed", "Building", "Done"];
+const STAGE_COLOR = {
+  Specified: "color-mix(in srgb, var(--dim) 70%, var(--accent))", Clarified: "color-mix(in srgb, var(--dim) 45%, var(--accent))",
+  Planned: "color-mix(in srgb, var(--dim) 25%, var(--accent))", Tasked: "var(--accent)", Analyzed: "var(--agent)",
+  Building: "var(--warn)", Done: "var(--ok)", Fragment: "var(--dim)",
+};
+const NEXT_CMD = { Specified: "/speckit-clarify", Clarified: "/speckit-plan", Planned: "/speckit-tasks", Tasked: "/speckit-analyze", Analyzed: "/speckit-implement", Building: "/speckit-implement" };
+
+// ---------- sample data (invented) ----------
+const WT = [
+  { id: "main", name: "main checkout", branch: "main", path: "~/Projects/proj-nava", main: true,
+    feature: "27450", activity: "6h", dirty: 0, ahead: 0, behind: 3, pull: true },
+  { id: "t3-4f1a", name: "t3-4f1a", branch: "feature/WB-27512-Bulk-Asset-Tagging", path: "~/.t3/worktrees/proj-nava/t3-4f1a",
+    feature: "27512", activity: "2m", dirty: 4, ahead: 9, behind: 0, live: true },
+  { id: "t3-9c2e", name: "t3-9c2e", branch: "feature/WB-27232-Multi-Tenant-Agent-Setup", path: "~/.t3/worktrees/proj-nava/t3-9c2e",
+    feature: "27232", activity: "14m", dirty: 0, ahead: 5, behind: 1, live: true },
+  { id: "t3-b71d", name: "t3-b71d", branch: "plan/WB-27530-Saved-Search-Alerts", path: "~/.t3/worktrees/proj-nava/t3-b71d",
+    feature: "27530", activity: "1h", dirty: 1, ahead: 2, behind: 0 },
+  { id: "t3-0aa3", name: "t3-0aa3", branch: "feature/WB-27201-Common-Asset-Facts", path: "~/.t3/worktrees/proj-nava/t3-0aa3",
+    feature: "27201", activity: "19d", dirty: 2, ahead: 0, behind: 41, stale: true },
+  { id: "t3-77e0", name: "t3-77e0", branch: "feature/WB-27388-Rights-Expiry-Banner", path: "~/.t3/worktrees/proj-nava/t3-77e0",
+    gone: true, activity: "26d" },
+];
+const wt = id => WT.find(w => w.id === id);
+
+// Each spec: copies keyed by worktree. `same` = byte-identical to the main checkout (collapsed).
+const SPECS = [
+  { id: "27512-bulk-asset-tagging", ticket: "27512", title: "Bulk tagging for asset libraries", branch: "feature/WB-27512-Bulk-Asset-Tagging",
+    copies: { "t3-4f1a": { stage: "Building", done: 14, total: 31, dec: [7, 3, 0], age: "2m", files: { "spec.md": "new", "plan.md": "new", "research.md": "new", "data-model.md": "new", "tasks.md": "new", "review.md": "new" }, uncommitted: ["tasks.md", "plan.md"], next: ["T015", "Add tag picker to the selection toolbar"] } } },
+  { id: "27232-productionize-multi-tenant-agent-setup", ticket: "27232", title: "Productionize multi-tenant agent setup", branch: "feature/WB-27232-Multi-Tenant-Agent-Setup",
+    copies: {
+      "t3-9c2e": { stage: "Building", done: 6, total: 22, dec: [6, 4, 1], age: "14m", files: { "spec.md": "changed", "plan.md": "changed", "research.md": "same", "tasks.md": "new", "review.md": "new" }, next: ["T007", "Load tenant agent config from the secrets store"] },
+      "main": { stage: "Planned", done: 0, total: 0, dec: [6, 0, 0], age: "6d", files: { "spec.md": "", "plan.md": "", "research.md": "" } } } },
+  { id: "27530-saved-search-alerts", ticket: "27530", title: "Alerts for saved searches", branch: "plan/WB-27530-Saved-Search-Alerts",
+    copies: { "t3-b71d": { stage: "Clarified", done: 0, total: 0, dec: [3, 2, 0], age: "1h", markers: 2, files: { "spec.md": "new" }, uncommitted: ["spec.md"] } } },
+  { id: "012-standarize-styles", ticket: "012", title: "Standardize list styles", branch: "012-standarize-styles",
+    copies: { "main": { stage: "Clarified", done: 0, total: 0, dec: [4, 0, 0], age: "5d", files: { "spec.md": "" } }, "t3-4f1a": { same: true }, "t3-9c2e": { same: true }, "t3-b71d": { same: true } } },
+  { id: "27201-common-asset-facts", ticket: "27201", title: "Common asset facts on the asset", branch: "feature/WB-27201-Common-Asset-Facts",
+    copies: {
+      "t3-0aa3": { stage: "Specified", done: 0, total: 0, dec: [0, 0, 0], age: "19d", files: { "spec.md": "changed" }, uncommitted: ["spec.md"], idle: true },
+      "main": { stage: "Specified", done: 0, total: 0, dec: [0, 0, 0], age: "13d", files: { "spec.md": "" } } } },
+  { id: "27450-shared-sign-in-host", ticket: "27450", title: "Shared sign-in callback host for tenant hosts", branch: "feature/WB-27450-Shared-Sign-In-Callback-Host", done93: true,
+    copies: { "main": { stage: "Done", done: 24, total: 24, dec: [5, 2, 0], age: "6h", files: { "spec.md": "", "plan.md": "", "tasks.md": "" } },
+      "t3-b71d": { stage: "Done", done: 24, total: 24, dec: [5, 2, 0], age: "1h", files: { "spec.md": "changed", "plan.md": "same", "tasks.md": "same" }, uncommitted: ["spec.md"] } } },
+];
+const COUNTS_MAIN = { Done: 93, Fragment: 8 };
+
+// ---------- state ----------
+const OPENED = "main"; // the folder the user opened
+const state = { view: "specs", scope: OPENED, spec: null, copy: null, open: new Set(["t3-4f1a"]) };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pill = s => `<span class="pill" style="color:${STAGE_COLOR[s]};background:color-mix(in srgb, ${STAGE_COLOR[s]} 14%, transparent)">${s}</span>`;
+const prog = (d, t) => t ? `<div class="prog"><div class="track"><div class="fill ${d === t ? "ok" : ""}" style="width:${d / t * 100}%"></div></div><span class="num">${d}/${t}</span></div>` : `<span class="notask">no tasks</span>`;
+const decs = ([h, a, f]) => (h + a + f) ? `<div class="decs">${h ? `<span><i style="background:var(--ok)"></i>${h}</span>` : ""}${a ? `<span><i style="background:var(--agent)"></i>${a}</span>` : ""}${f ? `<span><i style="background:var(--warn)"></i>${f}</span>` : ""}</div>` : `<span class="dim">—</span>`;
+const wname = id => wt(id).main ? "main checkout" : wt(id).name;
+const wtchip = (id, extra = "") => { const w = wt(id); return `<span class="wtchip ${w.main ? "" : "agent"} ${extra}" title="${esc(w.branch)} · ${esc(w.path)}">${ICON.branch}${esc(w.main ? "main" : w.name)}</span>`; };
+
+// The spec's home copy: the worktree with its Feature Branch checked out, else the newest real copy.
+function home(s) {
+  const real = Object.entries(s.copies).filter(([, c]) => !c.same);
+  const byBranch = real.find(([id]) => wt(id).branch === s.branch);
+  return (byBranch || real[0])[0];
+}
+// Which copy a worktree sees: its own if it differs, else the main checkout's (every worktree branched from main).
+function copyIn(s, x) {
+  if (s.copies[x] && !s.copies[x].same) return x;
+  return s.copies.main ? "main" : null;
+}
+const inScope = s => copyIn(s, state.scope) !== null;
+const shownCopy = s => copyIn(s, state.scope);
+const otherCopies = s => { const sh = shownCopy(s); return Object.entries(s.copies).filter(([id, x]) => !x.same && id !== sh && id !== state.scope); };
+const waiting = s => Object.values(s.copies).some(c => c.stage === "Done" && c.uncommitted);
+const specCount = x => 104 + SPECS.filter(s => !s.copies.main && s.copies[x]).length;
+
+// ---------- sidebar ----------
+function side() {
+  const wtBtn = w => {
+    const diff = SPECS.filter(s => s.copies[w.id] && !s.copies[w.id].same && !w.main).length;
+    const l2 = w.gone ? "folder missing" : (w.id === OPENED ? "opened folder · " : "") + (w.main ? "main" : `${diff} spec${diff === 1 ? "" : "s"} differ${diff === 1 ? "s" : ""} from main`);
+    return `<button class="wt-btn ${state.scope === w.id && state.view === "specs" ? "on" : ""} ${w.gone ? "gone" : ""}" data-scope="${w.id}" title="${esc(w.branch)}">
+      <span class="l1"><span class="glyph ${w.main ? "mainwt" : w.live ? "live" : ""}"></span><span class="lbl">${esc(wname(w.id))}</span>${w.dirty ? `<span class="dirty" title="${w.dirty} uncommitted"></span>` : ""}<span class="n">${w.activity}</span></span>
+      <span class="l2">${esc(l2)}</span></button>`;
+  };
+  document.getElementById("side").innerHTML = `
+    <div><h6>Projects</h6><div class="nav">
+      <button class="proj on"><span class="ic">P</span><span class="lbl">proj-nava</span><span class="n">${specCount(state.scope)}</span></button>
+      <button class="proj"><span class="ic plain">P</span><span class="lbl">proj-okc-pulse</span><span class="n">43</span></button>
+    </div><button class="open">+ Open project…</button></div>
+    <div><h6>Views</h6><div class="nav">
+      <button data-view="specs" class="${state.view === "specs" ? "on" : ""}">${ICON.grid}<span class="lbl">All specs</span><span class="n">${specCount(state.scope)}</span></button>
+      <button data-view="worktrees" class="${state.view === "worktrees" ? "on" : ""}">${ICON.tree}<span class="lbl">Worktrees</span><span class="n">${WT.filter(w => !w.gone).length}</span></button>
+      <button>${ICON.line}<span class="lbl">Timeline</span></button>
+      <button>${ICON.clock}<span class="lbl">Waiting on me</span><span class="n">4</span></button>
+      <button>${ICON.half}<span class="lbl">Unfinished</span><span class="n">4</span></button>
+    </div></div>
+    <div><h6>Worktrees <span class="new">new</span></h6><div class="nav">${WT.map(wtBtn).join("")}</div></div>`;
+}
+
+// ---------- all specs ----------
+const mins = a => a.endsWith("m") ? +a.slice(0, -1) : a.endsWith("h") ? +a.slice(0, -1) * 60 : +a.slice(0, -1) * 1440;
+function lanes() {
+  const w = wt(state.scope);
+  const s = w.feature && SPECS.find(x => x.ticket === w.feature);
+  let banner = "";
+  if (s) {
+    const c = s.copies[copyIn(s, w.id)], pct = c.total ? Math.round(c.done / c.total * 100) : 0;
+    banner = `<div class="now" data-spec="${s.id}" data-copy="${copyIn(s, w.id)}" role="button" tabindex="0">
+      <div class="eyebrow"><span class="pulse"></span>Now working on · from .specify/feature.json${w.main ? "" : " in " + esc(w.name)}</div>
+      <div class="right"><div class="pct">${c.total ? pct + "%" : c.stage}</div>${c.total ? prog(c.done, c.total) : ""}</div>
+      <div class="t">${esc(s.title)}</div>
+      <div class="meta">${pill(c.stage)}<span class="mono">${esc(w.branch)}</span>${w.dirty ? `<span>${w.dirty} uncommitted files</span>` : ""}</div></div>`;
+  }
+  const rest = WT.filter(x => x.id !== w.id && x.feature && !x.gone).map(x => ({ w: x, s: SPECS.find(y => y.ticket === x.feature) }))
+    .filter(x => x.s).sort((a, b) => mins(a.w.activity) - mins(b.w.activity));
+  const lane = ({ w, s }) => { const c = s.copies[copyIn(s, w.id)];
+    return `<button class="lane ${w.live ? "" : "idle"}" data-scope="${w.id}" title="Switch to ${esc(wname(w.id))}">
+      <span class="top">${wtchip(w.id)}${w.live ? '<span class="pulse" title="Changed in the last hour"></span>' : ""}<span class="when">${w.activity} ago</span></span>
+      <span class="tt">${esc(s.title)}</span>
+      <span class="bot">${pill(c.stage)}${c.total ? prog(c.done, c.total) : `<span class="notask">${c.stage === "Done" ? "merged" : "no tasks yet"}</span>`}</span></button>`; };
+  return banner + (rest.length ? `<div class="sect" style="margin-top:12px"><h2>Other worktrees <span class="n" style="font-weight:500">${rest.length}</span><span class="r">their current feature · click to switch</span></h2><div class="lanes">${rest.map(lane).join("")}</div></div>` : "");
+}
+
+function rowHtml(s) {
+  const hid = shownCopy(s), c = s.copies[hid];
+  const chips = [];
+  if (state.scope !== OPENED && hid === state.scope) chips.push(`<span class="chip calm">${s.copies.main ? "changed on this branch" : "new on this branch"}</span>`);
+  otherCopies(s).forEach(([id, x]) => chips.push(`<button class="also linkish" data-scope="${id}" title="Switch to ${esc(wname(id))}">${wtchip(id)} has <b>${x.stage}</b>${x.uncommitted ? " · uncommitted" : ""} →</button>`));
+  if (c.uncommitted) chips.push(`<span class="chip warn">${c.uncommitted.length} uncommitted</span>`);
+  if (c.stage === "Done" && waiting(s)) chips.push(`<span class="chip bad">Done, but edited and uncommitted</span>`);
+  if (c.markers) chips.push(`<span class="chip bad">${c.markers} open questions</span>`);
+  if (c.idle) chips.push(`<span class="chip quiet">worktree idle ${c.age}</span>`);
+  const sub = chips.length ? `<div class="why">${chips.join("")}</div>` : `<div class="dim mono" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.id.replace(/^\d+-/, ""))}</div>`;
+  return `<div class="row" data-spec="${s.id}" data-copy="${hid}" role="button" tabindex="0"><i class="stripe" style="background:${STAGE_COLOR[c.stage]}"></i>
+    <span class="tk">${esc(s.ticket)}</span>
+    <div style="min-width:0"><div class="tt">${esc(s.title)}</div>${sub}</div>
+    <div>${pill(c.stage)}</div>
+    <div class="c-prog">${prog(c.done, c.total)}</div>
+    <div class="c-dec">${decs(c.dec)}</div>
+    <div class="age">${c.age}</div></div>`;
+}
+
+function switcher() {
+  return `<label class="wtsel"><span class="dim">Worktree</span><select id="wtsel" aria-label="Worktree">${WT.filter(w => !w.gone).map(w => `<option value="${w.id}" ${state.scope === w.id ? "selected" : ""}>${esc(wname(w.id))}${w.id === OPENED ? " (opened)" : ""} · ${esc(w.branch)}</option>`).join("")}</select></label>`;
+}
+
+function specsView() {
+  const w = wt(state.scope);
+  const list = SPECS.filter(inScope);
+  const counts = {}; STAGES.forEach(s => counts[s] = 0);
+  const added = {};
+  list.filter(s => !s.done93).forEach(s => { const c = s.copies[shownCopy(s)]; counts[c.stage]++; if (!s.copies.main) added[c.stage] = (added[c.stage] || 0) + 1; });
+  counts.Done += 93;
+  const mx = Math.max(...Object.values(counts));
+
+  let bar;
+  if (state.scope === OPENED) {
+    const elsewhere = SPECS.filter(s => !inScope(s));
+    const differ = SPECS.filter(s => inScope(s) && otherCopies(s).length);
+    bar = `<div class="scope"><span class="pulse" style="background:var(--info)"></span><span>Other worktrees have <b>${elsewhere.length} specs</b> that aren't in this folder and <b>${differ.length}</b> with a different copy.</span>
+      ${elsewhere.map(s => { const id = Object.keys(s.copies)[0]; return `<button class="also linkish" data-scope="${id}">${wtchip(id)} ${esc(s.ticket)} ${esc(s.title)} →</button>`; }).join("")}</div>`;
+  } else {
+    bar = `<div class="scope">${wtchip(w.id)}<span>Viewing worktree <b>${esc(w.name)}</b> at <span class="mono">${esc(w.path)}</span>. You opened <span class="mono">${esc(wt(OPENED).path)}</span>.</span><button class="linkbtn" data-scope="${OPENED}">Back to ${esc(wname(OPENED))}</button></div>`;
+  }
+
+  const order = ["Building", "Analyzed", "Tasked", "Planned", "Clarified", "Specified"];
+  let body = "";
+  order.forEach(st => {
+    const fs = list.filter(s => !s.done93 && s.copies[shownCopy(s)].stage === st);
+    if (!fs.length) return;
+    body += `<div class="grp"><span class="gdot" style="background:${STAGE_COLOR[st]}"></span>${st}<span class="n">${fs.length}</span></div>` + fs.map(rowHtml).join("");
+  });
+  const flagged = list.filter(s => s.done93 && waiting(s));
+  body += `<div class="grp"><span class="gdot" style="background:${STAGE_COLOR.Done}"></span>Done<span class="n">93</span>${flagged.length ? `<span class="chip bad" style="font-weight:600">${flagged.length} waiting on you</span>` : ""}<span class="gp">Show all ▾</span></div>${flagged.map(rowHtml).join("")}
+    <div class="grp"><span class="gdot" style="background:${STAGE_COLOR.Fragment}"></span>Fragment<span class="n">8</span><span class="gp">Show ▾</span></div>`;
+
+  return `
+    <div class="head"><div><h1>All specs</h1>
+      <div class="sub">proj-nava · ${specCount(state.scope)} features · on <span class="mono">${esc(w.branch)}</span>${state.scope === OPENED ? "" : ` · worktree ${esc(w.name)}`} · parsed Nov 9, 2026 at 7:37 AM</div></div>
+      <div class="tools">${switcher()}<input class="search" id="q" placeholder="Filter by title, ticket, branch" aria-label="Filter"><div class="seg"><button class="on">Stage</button><button>Ticket</button></div></div></div>
+    ${lanes()}
+    <div class="sect">${bar}<div class="pipe">${STAGES.map(s => `<div><span class="lbl">${s}</span><span class="cnt">${counts[s]}${added[s] ? `<small title="new on this worktree's branch">+${added[s]} new</small>` : ""}</span><span class="bar" style="background:${STAGE_COLOR[s]};width:${Math.max(counts[s] ? 8 : 0, counts[s] / mx * 100)}%"></span></div>`).join("")}
+      <div><span class="lbl">Fragments</span><span class="cnt">8</span><span class="bar" style="background:var(--dim);width:20%"></span></div></div></div>
+    <div class="sect"><div class="card list">${body}</div></div>`;
+}
+
+
+// ---------- worktrees view ----------
+function worktreesView() {
+  const item = w => {
+    const f = w.feature && SPECS.find(s => s.ticket === w.feature), fc = f && f.copies[w.id];
+    const diffs = w.main ? [] : SPECS.filter(s => s.copies[w.id] && !s.copies[w.id].same);
+    const nNew = diffs.filter(s => !s.copies.main).length, nChg = diffs.length - nNew;
+    const diffChips = w.gone ? `<span class="chip quiet">not readable</span>` : w.main ? `<span class="chip quiet">baseline</span>` :
+      [nNew ? `<span class="chip calm">${nNew} new</span>` : "", nChg ? `<span class="chip warn">${nChg} changed</span>` : "", `<span class="chip quiet">${104 - nChg} same</span>`].join("");
+    const git = w.gone ? `<span>last seen ${w.activity} ago</span>` : `<span>${w.ahead ? `↑${w.ahead} ` : ""}${w.behind ? `↓${w.behind} vs main` : w.ahead ? "vs main" : "up to date"}</span>${w.dirty ? `<span class="w">${w.dirty} uncommitted</span>` : `<span>clean</span>`}`;
+    const detail = w.gone
+      ? `<div class="path"><span>${esc(w.path)}</span><span class="chip bad">folder missing</span></div>
+         <div class="nextbox">Git still lists this worktree, but its folder is gone. Spec Deck won't remove it. To clean up, run<br><span class="mono">git worktree prune</span> <button class="linkbtn" data-copy-cmd="git worktree prune">Copy</button></div>`
+      : `<div class="path"><span>${esc(w.path)}</span><button class="linkbtn" data-toast="Opened in file manager">Reveal</button><button class="linkbtn" data-toast="Copied ${esc(w.branch)}">Copy branch</button>${w.pull ? `<span class="chip calm">Pull available · 3 commits</span>` : ""}</div>
+         ${diffs.length ? diffs.map(s => { const c = s.copies[w.id]; const m = s.copies.main;
+            return `<div class="dspec" data-spec="${s.id}" data-copy="${w.id}"><span class="chip ${m ? "warn" : "calm"}" style="text-align:center">${m ? "changed" : "new"}</span><span class="tk">${esc(s.ticket)}</span><span class="t">${esc(s.title)}${m ? ` <span class="dim">· main has ${m.stage}</span>` : ""}</span>${pill(c.stage)}</div>`; }).join("")
+          : `<div class="dim" style="font-size:12.5px">${w.main ? "The folder you opened. Every other worktree is compared against it." : "No spec differs from the main checkout."}</div>`}`;
+    return `<div class="wt ${state.open.has(w.id) ? "open" : ""} ${w.gone ? "gone" : ""}" data-wt="${w.id}">
+      <div class="wh" data-toggle="${w.id}" role="button" tabindex="0" aria-expanded="${state.open.has(w.id)}"><span class="car">▶</span>
+        <div style="min-width:0"><div class="nm"><span class="glyph ${w.main ? "mainwt" : w.live ? "live" : ""}"></span><span>${esc(w.main ? "main checkout" : w.name)}</span>${w.stale ? '<span class="chip quiet">idle</span>' : ""}</div><div class="br">${esc(w.branch)}</div></div>
+        <div class="feat">${f ? `<div class="ft">${esc(f.title)}</div><div style="display:flex;gap:8px;align-items:center;margin-top:3px">${pill(fc.stage)}${fc.total ? `<span class="dim" style="font-size:11.5px">${fc.done}/${fc.total} tasks</span>` : ""}</div>` : `<span class="dim">${w.gone ? "—" : "no feature.json"}</span>`}</div>
+        <div class="c-diff diff">${diffChips}</div>
+        <div class="git">${git}</div>
+        <div class="when">${w.activity}</div>
+      </div><div class="wb">${detail}</div></div>`;
+  };
+  return `<div class="head"><div><h1>Worktrees</h1><div class="sub">proj-nava · ${WT.length} from <span class="mono">git worktree list</span> · compared against the main checkout</div></div>
+      <div class="tools"><div class="seg"><button class="on">Last activity</button><button>Name</button></div></div></div>
+    <div class="card wts">${WT.map(item).join("")}</div>
+    <div class="foot">Spec Deck reads each worktree's folder and git state. It never creates, removes or prunes worktrees.</div>`;
+}
+
+// ---------- spec view ----------
+function specView() {
+  const s = SPECS.find(x => x.id === state.spec);
+  const cid = state.copy && s.copies[state.copy] && !s.copies[state.copy].same ? state.copy : home(s);
+  const c = s.copies[cid], w = wt(cid), h = home(s);
+  const real = Object.entries(s.copies).filter(([, x]) => !x.same);
+  const sameIds = Object.entries(s.copies).filter(([, x]) => x.same).map(([id]) => id);
+  const ix = STAGES.indexOf(c.stage);
+  const otherStages = real.filter(([id]) => id !== cid).map(([, x]) => STAGES.indexOf(x.stage));
+  const copyBtn = ([id, x]) => { const ww = wt(id);
+    return `<button class="copy ${id === cid ? "on" : ""}" data-copy-pick="${id}">
+      <span class="c1">${wtchip(id)}${id === h ? '<span class="home" title="Has this spec\'s Feature Branch checked out">home</span>' : ""}</span>
+      <span class="c2">${pill(x.stage)}<span>${x.total ? `${x.done}/${x.total}` : "no tasks"}</span><span>· ${x.age}</span></span></button>`; };
+  let note;
+  if (real.length > 1) {
+    const o = real.find(([id]) => id !== cid);
+    note = cid === h
+      ? `Showing <b>${esc(w.name)}</b>, the worktree with <span class="mono">${esc(s.branch)}</span> checked out. <b>${esc(wt(o[0]).main ? "The main checkout" : wt(o[0]).name)}</b> has an older copy at <b>${o[1].stage}</b>${o[0] === "main" ? "; it catches up when the branch merges" : ""}.`
+      : `Showing <b>${esc(w.main ? "the main checkout" : w.name)}</b>, which is not this spec's home. The current work is in <b>${esc(wt(h).name)}</b>.`;
+  } else if (!s.copies.main) note = `This spec exists only in worktree <b>${esc(w.name)}</b>. Before worktree support, Spec Deck could not see it.`;
+  else note = sameIds.length ? `Identical in ${sameIds.length} other worktrees, so there is one copy to show.` : "";
+  const files = Object.entries(c.files);
+  const fstate = v => v === "new" ? `<span class="chip calm">new on this branch</span>` : v === "changed" ? `<span class="chip warn">differs from main</span>` : v === "same" ? `<span class="chip quiet">same as main</span>` : `<span class="dim" style="font-size:11.5px">—</span>`;
+  const cmpRows = [["Stage", x => pill(x.stage)], ["Tasks", x => x.total ? `${x.done}/${x.total}` : "—"], ["Decisions", x => decs(x.dec)], ["Uncommitted", x => x.uncommitted ? `<span style="color:var(--warn)">${x.uncommitted.join(", ")}</span>` : "none"], ["Last change", x => x.age + " ago"]];
+  return `<div class="crumbs"><button data-view="specs">All specs</button><span>›</span><span>${esc(s.ticket)}</span></div>
+    <div class="spechead"><div style="min-width:0;flex:1 1 320px"><h1>${esc(s.title)}</h1>
+      <div class="meta"><span class="tk">${esc(s.ticket)}</span>${pill(c.stage)}<span class="mono">${esc(s.branch)}</span><button class="linkbtn" data-toast="Copied ${esc(s.branch)}">Copy</button></div></div>
+      <div class="actions"><button class="btn" data-toast="Opened ${esc(w.path)}/specs/${esc(s.id)}">Open folder</button>${NEXT_CMD[c.stage] ? `<button class="btn primary" data-toast="Copied: cd ${esc(w.path)} && ${NEXT_CMD[c.stage]}">Copy next command</button>` : ""}</div></div>
+    ${real.length > 1 || !w.main ? `<div class="copies" role="group" aria-label="Copies of this spec">${real.map(copyBtn).join("")}</div>` : ""}
+    ${note ? `<div class="statusnote">${note}</div>` : ""}
+    <div class="stepper">${STAGES.map((st, i) => `<div class="step ${i < ix ? "done" : i === ix ? "cur" : ""}">${otherStages.includes(i) && i !== ix ? '<span class="ghost" title="Another worktree\'s copy is here"></span>' : ""}${st}</div>`).join("")}</div>
+    <div class="kpis">
+      <div class="card kpi"><div class="l">Tasks</div><div class="v">${c.total ? `${c.done}/${c.total}` : "—"}</div><div class="s">${c.next ? `next ${c.next[0]}` : "no tasks.md"}</div></div>
+      <div class="card kpi"><div class="l">Decisions</div><div class="v">${c.dec[0] + c.dec[1] + c.dec[2]}</div><div class="s">${c.dec[0]} by you · ${c.dec[1]} by the agent</div></div>
+      <div class="card kpi"><div class="l">Worktree</div><div class="v" style="font-size:15px;margin-top:6px">${esc(w.main ? "main checkout" : w.name)}</div><div class="s">${w.dirty ? `${w.dirty} uncommitted files` : "clean"}</div></div>
+      <div class="card kpi"><div class="l">Last change</div><div class="v">${c.age}</div><div class="s">${w.live ? "agent active" : "in this copy"}</div></div>
+    </div>
+    <div class="grid2">
+      <section class="card panel"><header>Documents<span class="r">in ${esc(w.main ? "main checkout" : w.name)}</span></header>
+        <div class="files">${files.map(([n, v]) => `<div class="file"><span class="fn">${esc(n)}${c.uncommitted && c.uncommitted.includes(n) ? ' <span class="chip warn">uncommitted</span>' : ""}</span>${w.main ? '<span class="dim" style="font-size:11.5px">committed</span>' : fstate(v)}</div>`).join("")}</div>
+        ${c.next ? `<div class="nextbox"><b>Next:</b> ${esc(c.next[0])} ${esc(c.next[1])}<br><span class="mono dim">cd ${esc(w.path)} &amp;&amp; ${NEXT_CMD[c.stage]}</span></div>` : ""}
+      </section>
+      ${real.length > 1 ? `<section class="card panel"><header>Copies side by side<span class="r">${real.length} worktrees</span></header>
+        <div class="tblwrap"><table class="cmp"><thead><tr><th></th>${real.map(([id]) => `<th>${wtchip(id)}</th>`).join("")}</tr></thead>
+        <tbody>${cmpRows.map(([l, fn]) => `<tr><td class="rowh">${l}</td>${real.map(([, x]) => `<td class="num">${fn(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>`
+      : `<section class="card panel"><header>Review on GitHub</header><div style="padding:12px 14px;font-size:12.5px;color:var(--dim)">Comments check the file in <b style="color:var(--fg)">${esc(w.main ? "the main checkout" : w.name)}</b> against the PR head, because that worktree has the branch checked out (FR-060).${c.uncommitted ? ` Commenting on ${c.uncommitted.join(", ")} is off until it is committed and pushed.` : ""}</div></section>`}
+    </div>`;
+}
+
+// ---------- render + events ----------
+let toastT;
+function toast(msg) { let t = document.querySelector(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 1800); }
+function compactNav() {
+  return `<div class="compact-nav"><select id="cnav" aria-label="View">
+    ${WT.filter(w => !w.gone).map(w => `<option value="scope:${w.id}" ${state.view === "specs" && state.scope === w.id ? "selected" : ""}>All specs · ${esc(wname(w.id))}${w.id === OPENED ? " (opened)" : ""}</option>`).join("")}
+    <option value="view:worktrees" ${state.view === "worktrees" ? "selected" : ""}>Worktrees</option></select></div>`;
+}
+function render() {
+  side();
+  const m = document.getElementById("main");
+  m.innerHTML = compactNav() + (state.view === "worktrees" ? worktreesView() : state.view === "spec" ? specView() : specsView());
+  const h = state.view === "spec" ? "spec-" + state.spec.split("-")[0] + (state.copy ? "-" + state.copy : "") : state.view === "worktrees" ? "worktrees" : state.scope === OPENED ? "" : "scope-" + state.scope;
+  if (location.hash.slice(1) !== h) history.replaceState(null, "", h ? "#" + h : location.pathname);
+}
+function fromHash() {
+  const h = location.hash.slice(1);
+  if (h === "worktrees") Object.assign(state, { view: "worktrees" });
+  else if (h.startsWith("scope-") && wt(h.slice(6)) && !wt(h.slice(6)).gone) Object.assign(state, { view: "specs", scope: h.slice(6) });
+  else if (h.startsWith("spec-")) { const [, t, ...rest] = h.split("-"); const s = SPECS.find(x => x.ticket === t);
+    if (s) Object.assign(state, { view: "spec", spec: s.id, copy: rest.length ? rest.join("-") : null }); }
+  else Object.assign(state, { view: "specs", scope: OPENED });
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-view],[data-scope],[data-spec],[data-toggle],[data-copy-pick],[data-toast],[data-copy-cmd]");
+  if (!t) return;
+  if (t.dataset.toast) return toast(t.dataset.toast);
+  if (t.dataset.copyCmd) { navigator.clipboard?.writeText(t.dataset.copyCmd).catch(() => {}); return toast("Copied " + t.dataset.copyCmd); }
+  if (t.dataset.view) state.view = t.dataset.view;
+  else if (t.dataset.scope) { const w = wt(t.dataset.scope); if (w && w.gone) { state.view = "worktrees"; state.open.add(w.id); } else { Object.assign(state, { view: "specs", scope: t.dataset.scope }); toast("Switched to " + wname(w.id)); } }
+  else if (t.dataset.spec) Object.assign(state, { view: "spec", spec: t.dataset.spec, copy: t.dataset.copy || null });
+  else if (t.dataset.toggle) { const id = t.dataset.toggle; state.open.has(id) ? state.open.delete(id) : state.open.add(id); }
+  else if (t.dataset.copyPick) state.copy = t.dataset.copyPick;
+  render();
+  if (!t.dataset.toggle && !t.dataset.copyPick) document.querySelector(".win").scrollIntoView({ block: "nearest" });
+});
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".wh,.now,.dspec,.row")) { e.preventDefault(); e.target.click(); } });
+document.addEventListener("change", e => {
+  if (e.target.id === "wtsel") { Object.assign(state, { view: "specs", scope: e.target.value }); render(); }
+  if (e.target.id === "cnav") { const [k, v] = e.target.value.split(":"); if (k === "view") state.view = v; else Object.assign(state, { view: "specs", scope: v }); render(); }
+});
+window.addEventListener("hashchange", () => { fromHash(); render(); });
+fromHash(); render();
+</script>

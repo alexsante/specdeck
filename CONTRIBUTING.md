@@ -44,7 +44,7 @@ sudo apt-get install -y \
   patchelf
 ```
 
-On macOS, install the Xcode command line tools, then use the same Cargo commands. Windows is later in the platform order and is not covered by CI yet.
+On macOS, install the Xcode command line tools, then use the same Cargo commands. Windows is later in the platform order. CI runs the tests on Linux and only compiles on macOS and Windows.
 
 The GitHub CLI (`gh`) is needed only when you try review comments or the pull badge against GitHub. The app never reads a token itself; `gh` does.
 

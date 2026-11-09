@@ -1,20 +1,29 @@
+# Checks every push to main and every pull request.
+# Linux runs the tests; macOS and Windows only compile, which is enough to catch
+# platform-specific breakage (their runners cost more on a private repo).
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   test:
-    name: Build and test
+    name: Build and test (Linux)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
+      # Keep this list in step with CONTRIBUTING.md#setup.
       - name: Install Tauri system dependencies
         run: |
           sudo apt-get update
@@ -34,13 +43,35 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Python sources compile
         run: python3 -m compileall -q prototype scripts
 
-      - name: Generated interface matches the template
+      - name: The app interface matches its template
         run: |
-          python3 -I scripts/make_ui.py prototype/template.html /tmp/index.html
-          diff -u app/ui/index.html /tmp/index.html
+          python3 -I scripts/make_ui.py prototype/template.html app/ui/index.html
+          git diff --exit-code app/ui/index.html || { echo "::error::app/ui/index.html is out of date. Run 'make ui' and commit the result."; exit 1; }
 
       - name: Test
         run: cargo test --workspace --locked
+
+  compile:
+    name: Compile (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+          - name: Windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --locked -p spec-deck

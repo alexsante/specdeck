@@ -8,6 +8,7 @@ pub mod model;
 pub mod review;
 pub mod spec;
 pub mod tasks;
+pub mod worktree;
 mod text;
 
 pub use model::*;
@@ -35,7 +36,7 @@ pub fn git(repo: &Path, args: &[&str]) -> String {
         .unwrap_or_default()
 }
 
-fn list_dir(dir: &Path) -> Vec<String> {
+pub(crate) fn list_dir(dir: &Path) -> Vec<String> {
     let mut names: Vec<String> = std::fs::read_dir(dir)
         .map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
         .unwrap_or_default();

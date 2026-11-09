@@ -193,6 +193,8 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - A spec file was edited on the branch but not added by it, so only the changed lines are in the PR diff. Comments outside those lines must fall back to a file-level comment.
 - The checked-out branch is behind or ahead of the PR head, or a spec file has uncommitted edits. Line numbers on screen may not match GitHub (FR-060).
 - The GitHub CLI is signed in to several accounts. The app uses the active one and shows its login.
+- A worktree's folder was deleted but git still lists it (prunable), or a worktree has a detached HEAD. The first is shown as missing; the second shows the commit instead of a branch.
+- The same spec folder exists in several worktrees. Identical copies are not mentioned; only copies whose files differ are (FR-073).
 
 ## Requirements *(mandatory)*
 
@@ -239,7 +241,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - **FR-052**: The app MUST support filtering by text and by stage, and grouping by stage or by ticket.
 - **FR-057**: The app MUST offer a Timeline view as described in User Story 9, using `**Created**:` (or the first commit adding the folder) as the start and the last commit touching the folder as the end.
 - **FR-058**: The app MUST derive links between specs from ticket numbers (`WB-12345` or `12345`) in `spec.md` that match another feature folder's ticket. Squash-merged history makes per-day commit activity unreliable, so the Timeline MUST NOT depend on it.
-- **FR-055**: The app MUST offer a "Waiting on me" view: specs (including Done specs) with open `[NEEDS CLARIFICATION: …]` markers, a FAIL verdict in the latest review pass, unresolved HIGH or CRITICAL findings in the latest pass, or flagged-conflict decision sessions on in-flight specs.
+- **FR-055**: The app MUST offer a "Waiting on me" view: specs (including Done specs) with open `[NEEDS CLARIFICATION: …]` markers, a FAIL verdict in the latest review pass, unresolved HIGH or CRITICAL findings in the latest pass, flagged-conflict decision sessions on in-flight specs, or Done specs with uncommitted edits in any worktree (FR-074).
 - **FR-056**: The app MUST offer an "Unfinished" view: in-flight specs that are not fully planned (Specified, Clarified, Planned) or not fully built (Tasked, Analyzed, Building), marked "Stalled" after 14 days without a commit unless all open tasks are deferred.
 - **FR-053**: The app MUST remember recently opened projects.
 - **FR-054**: The app SHOULD offer open in editor, reveal in the file manager, open ticket link, and copy next command.
@@ -247,6 +249,14 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - **FR-070**: From the pull badge (FR-068), the app MUST offer "Pull now", which runs `git pull --ff-only` from the branch's upstream. It MUST refuse, with a one-line reason, when anything tracked is uncommitted, a merge or rebase is in progress, the branch has diverged, or git needs credentials it can't get without a prompt. It MUST never run on its own, merge, or rebase. The watcher then reloads the project.
 - **FR-069**: The app MUST let me choose the theme (Dark, the default; Light; Match system), the interface font and the code font (curated choices shown in their own typeface, unavailable ones disabled, or any installed font by name), and the text size (80% to 140%, scaling the whole window). Choices apply live, persist across launches, and apply before the first paint.
 - **FR-068**: The app MUST show when the checked-out branch's upstream has commits the checkout doesn't have, with the commit count and how many `specs/` files they change when the forge can tell, and copy `git pull` on click. It MUST find this without writing to the repo: `git ls-remote`, never `git fetch` (FR-002). It checks on open, every 5 minutes, on window focus, and after changes on disk.
+
+**Worktrees**
+
+- **FR-071**: The app MUST find the project's git worktrees with `git worktree list --porcelain` (read-only, FR-002) and open on the folder I opened, at whatever branch it has checked out.
+- **FR-072**: The app MUST let me switch the view to any other worktree of the project from the sidebar and from a menu in the project header. A switched view reads that worktree's folder as if I had opened it; documents, "Pull now" (FR-070), and review checks (FR-060) then act on that worktree. Recent projects keep the folder I opened.
+- **FR-073**: The project view MUST say how many specs exist only in other worktrees and link to them, and each row MUST say which other worktrees hold a different copy of its spec (by content), with that copy's stage. Each worktree's `.specify/feature.json` feature MUST appear as a card under the "Now working on" banner, which shows the viewed worktree's own feature.
+- **FR-074**: A Done spec with uncommitted edits in any worktree MUST count as "Waiting on me".
+- **FR-075**: The app MUST offer a Worktrees view listing each worktree's folder, branch, current feature, specs new or changed against the main worktree, commits ahead and behind the main worktree's branch, uncommitted files, and last change. A worktree whose folder is gone MUST stay listed as missing, with `git worktree prune` offered as a command to copy; the app MUST NOT add, remove, or prune worktrees. The list refreshes after changes on disk in any worktree and on window focus.
 
 **Review on GitHub**
 
@@ -270,6 +280,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - **Review**: verdict and findings (ID, severity, owner, status, text, fix).
 - **Checklist**: name and done/total items.
 - **Change request**: the pull request (GitHub) or merge request (GitLab) for a feature's branch: number, state, head commit, file list.
+- **Worktree**: a checkout of the project's repo: folder, branch (or detached commit), whether it is the main worktree, whether its folder is missing, uncommitted files, commits ahead and behind the main worktree's branch, and its own copy of every spec.
 - **Review thread**: file, line range, state (open, resolved, outdated, pending), comments (author, time, text).
 
 ## Success Criteria *(mandatory)*
@@ -300,7 +311,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - Commenting on specs whose branch is merged, notifications, merging, and creating pull requests from the app.
 - GitLab (planned as the second adapter).
 - Launching agent commands from the app (only copying them).
-- Reading specs from branches that are not checked out. Planned for v2: list `feature/*` and `plan/*` branches and read their `specs/` through git without checking out.
+- Reading specs from branches that are not checked out in any worktree. Planned for v2: list `feature/*` and `plan/*` branches and read their `specs/` through git without checking out. Branches checked out in a worktree are read from disk (FR-071 to FR-075).
 - Requirement-level traceability (FR/SC to tasks), beyond counts.
 - Team distribution (signing, notarization, auto-update).
 
@@ -343,3 +354,12 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 ### Session 2026-11-09: Source contributions (human)
 
 - Q: Should people outside the project be able to contribute to the source? → A: Yes. Dual license, MIT OR Apache-2.0, with a contributing guide, code of conduct, security policy, issue and pull request templates, and CI. This does not change who the running app is for. Signed team distribution stays out of scope.
+
+### Session 2026-11-09: Worktrees (proposed by agent, decided by human)
+
+Context: agents work in separate git worktrees, so specs can exist in a worktree the opened folder can't see. The mockup is `prototype/worktrees.html`. The app finds worktrees with `git worktree list --porcelain`, a read-only call.
+
+- Q: Which worktree should the app show when it opens a project: all of them combined, or the opened folder? → A: The opened folder, on whatever branch it has checked out, with an option to switch to a related worktree. There is no combined all-worktrees list. The opened folder's view counts the specs that exist only in other worktrees, and each row says when another worktree has a different copy of its spec. Both lead to that worktree in one click.
+- Q: Should agent worktrees outside the repo folder (for example `~/.t3/worktrees/…`) carry a label naming the tool that created them? → A: No. Worktrees are named by folder and branch only.
+- Q: Should an uncommitted edit in a worktree put a Done spec in "Waiting on me"? → A: Yes (extends FR-055).
+- Q: On the timeline, one bar per spec or one per copy when worktrees disagree? → A: One bar per spec.

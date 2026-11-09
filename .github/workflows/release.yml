@@ -1,0 +1,125 @@
+# Builds installers for every supported platform.
+#
+#   Push a tag vX.Y.Z (matching the workspace version in Cargo.toml) -> one DRAFT release with
+#   every installer attached. Check it on GitHub, then click Publish; it becomes "Latest".
+#   Run the workflow by hand (Actions tab) -> the same builds, attached to the run as artifacts,
+#   with no release: a dry run.
+#
+# Supported platforms (decided 2026-11-09): Linux x64, macOS universal (Apple Silicon + Intel),
+# Windows x64. Builds are not code-signed yet; the release notes say how to open them.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    name: Check version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        name: Tag matches Cargo.toml
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml","rb"))["workspace"]["package"]["version"])')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v$version" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match the workspace version $version in Cargo.toml. Run 'make version V=X.Y.Z', commit, and tag vX.Y.Z."
+            exit 1
+          fi
+          echo "Building Spec Deck $version"
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-22.04 # oldest supported glibc, so the packages run on more distributions
+            args: ""
+            rust-targets: ""
+          - name: macOS universal
+            os: macos-latest
+            args: --target universal-apple-darwin
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - name: Windows x64
+            os: windows-latest
+            args: ""
+            rust-targets: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System libraries for Tauri (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.os }}
+
+      - name: Tauri CLI
+        shell: bash
+        run: cargo tauri --version 2>/dev/null || cargo install tauri-cli --version "^2" --locked
+
+      - name: Build and attach to a draft release
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: app
+          tauriScript: cargo tauri
+          args: ${{ matrix.args }}
+          # Without a tag (a manual run) these are empty and no release is made.
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: ${{ github.ref_type == 'tag' && format('Spec Deck {0}', github.ref_name) || '' }}
+          releaseDraft: true
+          prerelease: false
+          releaseBody: |
+            ## Download
+
+            | Platform | File |
+            |---|---|
+            | **macOS** (Apple Silicon and Intel) | `…_universal.dmg` |
+            | **Windows** 10 and 11 (x64) | `…_x64-setup.exe` (or `…_x64_en-US.msi` for managed installs) |
+            | **Linux** x64, any distribution | `…_amd64.AppImage` (make it executable, then run it) |
+            | **Linux** Debian, Ubuntu | `…_amd64.deb` |
+            | **Linux** Fedora, openSUSE | `….x86_64.rpm` |
+
+            These builds are not code-signed yet, so the first launch needs one extra step:
+
+            - **macOS**: right-click Spec Deck in Applications and choose **Open**, then **Open** again. Or run `xattr -dr com.apple.quarantine "/Applications/Spec Deck.app"`.
+            - **Windows**: if SmartScreen appears, choose **More info**, then **Run anyway**.
+            - **Linux**: the AppImage needs `chmod +x` first; the .deb and .rpm need WebKitGTK 4.1, which their package managers install.
+
+            Spec Deck reads a Spec Kit project; it needs `git`, and `gh` (signed in) for review comments.
+
+      - name: Keep the installers on manual runs
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec-deck-${{ needs.version.outputs.version }}-${{ runner.os }}
+          path: ${{ join(fromJSON(steps.tauri.outputs.artifactPaths), fromJSON('"\n"')) }}
+          if-no-files-found: error
