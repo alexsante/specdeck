@@ -557,6 +557,67 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px s
 .prefs > footer { display: flex; gap: 8px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--line); position: sticky; bottom: 0; background: var(--surface); }
 .prefs > footer .sp { flex: 1; }
 @container (max-width: 520px) { .themes { grid-template-columns: 1fr; } }
+/* ---------- worktrees (FR-071 to FR-075) ---------- */
+.wtchip { all: unset; display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10.5px; padding: 0 6px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); white-space: nowrap; line-height: 16px; }
+.wtchip svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; flex: none; }
+.wtchip.agent { color: var(--agent); border-color: color-mix(in srgb, var(--agent) 40%, var(--line)); background: color-mix(in srgb, var(--agent) 9%, transparent); }
+.wtlink { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--dim); white-space: nowrap; border-radius: 4px; padding: 0 2px; }
+.wtlink b { color: var(--fg); font-weight: 600; }
+.wtlink:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.wglyph { width: 8px; height: 8px; border-radius: 2px; flex: none; border: 1.5px solid var(--dim); box-sizing: border-box; }
+.wglyph.mainwt { border-color: var(--fg); background: var(--fg); }
+.wglyph.live { border: 0; background: var(--accent); border-radius: 50%; }
+.wdirty { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); flex: none; }
+.nav .wt-btn { flex-direction: column; align-items: stretch; gap: 1px; }
+.nav .wt-btn .l1 { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.nav .wt-btn .l1 .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav .wt-btn .l2 { padding-left: 15px; font-size: 11px; color: var(--dim); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav .wt-btn.gone { opacity: .55; }
+.wtsel { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+.wtsel select { font: inherit; color: var(--fg); padding: 5px 8px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--surface-2); max-width: 280px; }
+.wtbar { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid color-mix(in srgb, var(--info) 35%, var(--line)); background: color-mix(in srgb, var(--info) 7%, var(--card)); font-size: 12.5px; margin-top: 12px; }
+.wtbar .linkbtn { margin-left: auto; }
+.wtbar .wtlink { font-size: 12px; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.lane { all: unset; cursor: pointer; position: relative; padding: 10px 12px 10px 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card); display: flex; flex-direction: column; gap: 5px; min-width: 0; overflow: hidden; }
+.lane::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--grad); opacity: .85; }
+.lane.idle::before { background: var(--line); }
+.lane:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+.lane .top { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dim); min-width: 0; }
+.lane .top .when { margin-left: auto; font-variant-numeric: tabular-nums; flex: none; }
+.lane .tt { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lane .bot { display: flex; align-items: center; gap: 8px; }
+.lane .bot .prog { flex: 1; }
+.wts .wt { border-top: 1px solid var(--line); }
+.wts .wt:first-child { border-top: 0; }
+.wt > .wh { display: grid; grid-template-columns: 16px minmax(0, 1.2fr) minmax(0, 1.4fr) 150px 120px 56px; gap: 14px; align-items: center; padding: 11px 14px; cursor: pointer; }
+.wt > .wh:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.wt .nm { font-weight: 600; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.wt .nm > span:not(.chip):not(.wglyph) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt .br { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.wt .feat { min-width: 0; }
+.wt .feat .ft { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt .diff { display: flex; gap: 4px; flex-wrap: wrap; }
+.wt .git { font-size: 11.5px; color: var(--dim); display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.wt .git .w { color: var(--warn); }
+.wt .when { color: var(--dim); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.wt .car { color: var(--dim); font-size: 10px; transition: transform .15s; }
+.wt.open .car { transform: rotate(90deg); }
+.wt .wb { display: none; padding: 0 14px 12px 44px; }
+.wt.open .wb { display: block; }
+.wt .path { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.wt.gone .wh { opacity: .6; }
+.dspec { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 70px 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 5px 0; border-top: 1px dashed var(--line); font-size: 12.5px; cursor: pointer; }
+.dspec:first-of-type { border-top: 0; }
+.dspec:hover .t { color: var(--accent); }
+.dspec .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip.quiet { color: var(--dim); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.chip.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 13%, transparent); }
+.sect > h2 .r { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.wb .nextbox { margin: 0; }
+.chip.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+@container (max-width: 980px) { .wt > .wh { grid-template-columns: 16px minmax(0,1fr) minmax(0,1fr) 56px; } .wt .git, .wt .c-diff { display: none; } }
+@container (max-width: 600px) { .wt > .wh { grid-template-columns: 16px minmax(0,1fr) 50px; } .wt .feat { display: none; } .wt .wb { padding-left: 14px; } .dspec { grid-template-columns: 64px minmax(0,1fr); } .dspec .tk, .dspec .pill { display: none; } }
 /* ---------- review on GitHub (User Story 10); shared by the mockups and the app ---------- */
 .rv-chip { display: inline-flex; gap: 6px; align-items: center; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.5px; color: var(--fg); text-decoration: none; }
 .rv-chip:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); text-decoration: none; }
@@ -1070,6 +1131,7 @@ function waiting(f) {
   const hi = (lp?.findings || []).filter(x => !x.resolved && (x.severity === "HIGH" || x.severity === "CRITICAL")).length;
   if (hi) r.push([plural(hi, "open HIGH finding"), 1]);
   const fl = dec(f).flagged; if (inFlight(f) && fl) r.push([plural(fl, "flagged conflict"), 0]);
+  const de = DATA?.worktrees?.doneEdited?.[f.id]; if (de?.length) r.push([`Done, edited in ${de.join(", ")} (uncommitted)`, 1]);
   return r;
 }
 // "Unfinished": not fully planned, or partially built.
@@ -1142,10 +1204,11 @@ function row(f) {
   // Building-state chips (stalled / deferred) always show; planning chips only in the Unfinished view.
   const why = waiting(f).concat(unfinished(f).filter(([, tone]) => state.nav === "unfinished" || f.stage === "Building"));
   const tone = n => n === 1 ? "bad" : n === 2 ? "calm" : "";
+  const wx = wtChips(f);
   return `<div class="row" data-open="${esc(f.id)}"><i class="stripe" style="background:${STAGE_COLOR[f.stage]}"></i>
     <span class="tk">${esc(f.ticket)}</span>
     <div style="min-width:0"><div class="tt" title="${esc(f.title)}">${esc(f.title)}</div>
-      ${why.length ? `<div class="why">${why.map(([w, b]) => `<span class="chip ${tone(b)}">${esc(w)}</span>`).join("")}</div>` : `<div class="dim mono" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.slug)}</div>`}</div>
+      ${why.length || wx ? `<div class="why">${why.map(([w, b]) => `<span class="chip ${tone(b)}">${esc(w)}</span>`).join("")}${wx}</div>` : `<div class="dim mono" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.slug)}</div>`}</div>
     <div>${pill(f.stage, f.stageSource)}</div>
     <div class="c-prog">${prog(d, t)}</div>
     <div class="c-rev">${verdict(f.review)}</div>
@@ -1164,7 +1227,8 @@ function renderSide() {
       <button class="on"><span class="proj" title="${esc(DATA.path)}"><span class="ic">${esc((DATA.project[0] || "?").toUpperCase())}</span>${esc(DATA.project)}</span>${pullBadge()}<span class="n">${F.length}</span></button>
       ${recents.filter(r => r.ok && !isOpen(r)).map(r => `<button data-recent="${esc(r.path)}" title="${esc(shown(r))}"><span class="proj"><span class="ic" style="background:var(--surface-2);color:var(--dim)">${esc(r.name[0].toUpperCase())}</span>${esc(r.name)}</span><span class="n">${r.specs}</span></button>`).join("")}
     </div><button class="open" data-pick>+ Open project…</button></div>
-    <div><h6>Views</h6><div class="nav">${navs.map(([k, l, n]) => `<button class="${state.nav === k && !state.stage && state.view === "project" ? "on" : ""}" data-nav="${k}">${icon(k)}${l}<span class="n">${k === "timeline" ? "" : n}</span></button>`).join("")}</div></div>
+    <div><h6>Views</h6><div class="nav">${navs.map(([k, l, n]) => `<button class="${state.nav === k && !state.stage && state.view === "project" ? "on" : ""}" data-nav="${k}">${icon(k)}${l}<span class="n">${k === "timeline" ? "" : n}</span></button>`).join("")}${multiWT() ? `<button class="${state.nav === "worktrees" && state.view === "project" ? "on" : ""}" data-nav="worktrees"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="4" cy="12.5" r="1.6"/><circle cx="12" cy="6" r="1.6"/><path d="M4 5.1v5.8M12 7.6c0 2.6-4 2.4-7 3.6"/></svg>Worktrees<span class="n">${wts().list.filter(w => !w.prunable).length}</span></button>` : ""}</div></div>
+    ${multiWT() ? wtSide() : ""}
     <div><h6>Stages</h6><div class="nav">${[...STAGES].map(stageBtn).join("")}${stageBtn("Fragment")}</div></div>
     ${cur ? `<div><h6>Now working on</h6><div class="nav"><button data-open="${esc(cur.id)}" class="${state.spec === cur.id && state.view === "spec" ? "on" : ""}"><span class="pulse"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cur.ticket)} ${esc(cur.slug)}</span></button></div></div>` : ""}
     <div class="side-foot"><button data-prefs title="Theme, fonts and text size"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>Appearance<kbd>${IS_MAC ? "⌘," : "Ctrl+,"}</kbd></button></div>
@@ -1173,13 +1237,125 @@ function renderSide() {
 function compactNav() {
   return `<div class="compact-nav">
     <select data-cnav aria-label="View">${NAVS.map(([k, l]) => `<option value="nav:${k}" ${state.nav === k && !state.stage ? "selected" : ""}>${l}</option>`).join("")}
-      ${[...STAGES, "Fragment"].map(s => `<option value="stage:${s}" ${state.stage === s ? "selected" : ""}>Stage: ${s}</option>`).join("")}</select>
+      ${[...STAGES, "Fragment"].map(s => `<option value="stage:${s}" ${state.stage === s ? "selected" : ""}>Stage: ${s}</option>`).join("")}
+      ${multiWT() ? `<option value="nav:worktrees" ${state.nav === "worktrees" && !state.stage ? "selected" : ""}>Worktrees</option>` + wts().list.filter(w => !w.prunable && !w.viewing).map(w => `<option value="wt:${esc(w.path)}">Switch to worktree ${esc(w.name)}</option>`).join("") : ""}</select>
   </div>`;
 }
+
+// ---------- worktrees (FR-071 to FR-075) ----------
+// DATA.worktrees comes from the app (git worktree list, read-only). One worktree means none of this shows.
+const BRANCH_IC = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="4" cy="12.5" r="1.6"/><circle cx="12" cy="6" r="1.6"/><path d="M4 5.1v5.8M12 7.6c0 2.6-4 2.4-7 3.6"/></svg>';
+const NO_WT = { list: [], copies: {}, elsewhere: [], uncommitted: {}, doneEdited: {} };
+const wts = () => DATA?.worktrees || NO_WT;
+const multiWT = () => wts().list.length > 1;
+const viewingWT = () => wts().list.find(w => w.viewing);
+const openedWT = () => wts().list.find(w => w.opened);
+const wtByPath = p => wts().list.find(w => w.path === p);
+const wtChip = w => `<span class="wtchip ${w.main ? "" : "agent"}" title="${esc(w.branch || w.display || w.path || "")}">${BRANCH_IC}${esc(w.name)}</span>`;
+const agoTime = iso => { if (!iso) return "—"; const m = Math.max(0, (Date.now() - new Date(iso)) / 6e4); return m < 60 ? Math.round(m) + "m" : m < 1440 ? Math.round(m / 60) + "h" : Math.round(m / 1440) + "d"; };
+const isLive = w => !!w.activity && Date.now() - new Date(w.activity) < 36e5;
+const differ = n => `${n} spec${n === 1 ? " differs" : "s differ"}`;
+const copyLink = (c, id) => `<button class="wtlink" data-wt="${esc(c.path)}" ${id ? `data-wtspec="${esc(id)}"` : ""} title="Switch to ${esc(c.name)}${c.alsoIn?.length ? ` (same copy in ${esc(c.alsoIn.join(", "))})` : ""}">${wtChip(c)}${c.alsoIn?.length ? ` +${c.alsoIn.length}` : ""} has <b>${c.stage}</b>${c.total ? ` ${c.done}/${c.total}` : ""}${c.uncommitted ? " · uncommitted" : ""} →</button>`;
+
+// Row chips: other worktrees' copies of this spec that differ, and uncommitted files here.
+function wtChips(f) {
+  const out = (wts().copies[f.id] || []).map(c => copyLink(c));
+  const u = wts().uncommitted[f.id];
+  if (u?.length) out.push(`<span class="chip warn" title="${esc(u.join(", "))}">${plural(u.length, "uncommitted file")}</span>`);
+  return out.join("");
+}
+function wtSide() {
+  return `<div><h6>Worktrees</h6><div class="nav">${wts().list.map(w => {
+    const l2 = w.prunable ? "folder missing" : [w.opened ? "opened" : "", w.main ? "main worktree" : differ(w.changes.length) + " from main"].filter(Boolean).join(" · ");
+    const on = w.viewing && state.view === "project" && state.nav !== "worktrees";
+    return `<button class="wt-btn ${on ? "on" : ""} ${w.prunable ? "gone" : ""}" ${w.prunable ? 'data-nav="worktrees"' : `data-wt="${esc(w.path)}"`} title="${esc(w.display)}${w.branch ? " · " + esc(w.branch) : ""}">
+      <span class="l1"><span class="wglyph ${w.main ? "mainwt" : isLive(w) ? "live" : ""}"></span><span class="lbl">${esc(w.name)}</span>${w.dirty ? `<span class="wdirty" title="${plural(w.dirty, "uncommitted file")}"></span>` : ""}<span class="n">${w.prunable ? "" : agoTime(w.activity)}</span></span>
+      <span class="l2">${esc(l2)}</span></button>`;
+  }).join("")}</div></div>`;
+}
+function wtSelect() {
+  return `<label class="wtsel">Worktree <select data-wtsel aria-label="Worktree">${wts().list.map(w => `<option value="${esc(w.path)}" ${w.viewing ? "selected" : ""} ${w.prunable ? "disabled" : ""}>${esc(w.name)}${w.opened ? " (opened)" : ""} · ${esc(w.prunable ? "folder missing" : w.branch || "detached at " + w.head)}</option>`).join("")}</select></label>`;
+}
+// Under "Now working on": where the view is, specs only elsewhere, and each other worktree's current feature.
+function wtOverview() {
+  if (!multiWT()) return "";
+  const v = viewingWT(), o = openedWT(), W = wts();
+  const away = v && o && !v.opened ? `<div class="wtbar">${wtChip(v)}<span>Viewing worktree <b>${esc(v.name)}</b> at <span class="mono">${esc(v.display)}</span>. You opened <span class="mono">${esc(o.display)}</span>.</span><button class="linkbtn" data-wt="${esc(o.path)}">Back to ${esc(o.name)}</button></div>` : "";
+  const el = W.elsewhere, nd = Object.keys(W.copies).length;
+  const msg = el.length ? `Other worktrees have <b>${plural(el.length, "spec")}</b> that ${el.length === 1 ? "isn't" : "aren't"} in this folder${nd ? ` and <b>${nd}</b> with a different copy` : ""}.`
+    : `<b>${plural(nd, "spec")}</b> ${nd === 1 ? "has" : "have"} a different copy in another worktree.`;
+  const hint = el.length || nd ? `<div class="wtbar"><span>${msg}</span>${el.slice(0, 6).map(x => `<button class="wtlink" data-wt="${esc(x.path)}" data-wtspec="${esc(x.id)}" title="Switch to ${esc(x.name)} and open it">${wtChip(wtByPath(x.path) || x)} ${esc(x.ticket)} ${esc(x.title)} →</button>`).join("")}${el.length > 6 ? `<button class="linkbtn" data-nav="worktrees">${el.length - 6} more</button>` : ""}</div>` : "";
+  const others = W.list.filter(w => !w.viewing && !w.prunable && w.current).sort((a, b) => (b.activity || "").localeCompare(a.activity || ""));
+  const lanes = others.length ? `<div class="sect"><h2>Other worktrees <span class="n">${others.length}</span><span class="r">current feature from .specify/feature.json · click to switch</span></h2><div class="lanes">${others.map(w => {
+      const c = w.current;
+      return `<button class="lane ${isLive(w) ? "" : "idle"}" data-wt="${esc(w.path)}" ${c.feature ? `data-wtspec="${esc(c.feature)}"` : ""} title="Switch to ${esc(w.name)}"><span class="top">${wtChip(w)}${isLive(w) ? '<span class="pulse" title="Changed in the last hour"></span>' : ""}<span class="when">${agoTime(w.activity)} ago</span></span><span class="tt">${esc(c.title)}</span><span class="bot">${pill(c.stage)}${prog(c.done, c.total)}</span></button>`;
+    }).join("")}</div></div>` : "";
+  return away + hint + lanes;
+}
+// Spec view: uncommitted files here and the other worktrees' copies.
+function wtSpecNote(f) {
+  const cs = wts().copies[f.id] || [], u = wts().uncommitted[f.id] || [];
+  if (!cs.length && !u.length) return "";
+  return `<div class="wtbar">${u.length ? `<span>Uncommitted in this worktree: <span class="mono">${esc(u.join(", "))}</span>.</span>` : ""}${cs.length ? `<span>${cs.length === 1 ? "Another worktree has a different copy" : "Other worktrees have different copies"}:</span>${cs.map(c => copyLink(c, f.id)).join("")}` : ""}</div>`;
+}
+function renderWorktrees() {
+  const L = wts().list;
+  const item = w => {
+    const key = "wt:" + w.path, open = state.open.has(key), c = w.current;
+    const nNew = w.changes.filter(x => x.kind === "new").length, nChg = w.changes.length - nNew;
+    const diff = w.prunable ? `<span class="chip quiet">not readable</span>` : w.main ? `<span class="chip quiet">baseline</span>`
+      : nNew || nChg ? `${nNew ? `<span class="chip calm">${nNew} new</span>` : ""}${nChg ? `<span class="chip warn">${nChg} changed</span>` : ""}` : `<span class="chip quiet">same as main</span>`;
+    const git = w.prunable ? `<span>folder missing</span>` : `<span>${w.main ? "main worktree" : w.ahead || w.behind ? `${w.ahead ? "↑" + w.ahead + " " : ""}${w.behind ? "↓" + w.behind + " " : ""}vs main` : "even with main"}</span>${w.dirty ? `<span class="w">${plural(w.dirty, "uncommitted file")}</span>` : "<span>clean</span>"}`;
+    const body = w.prunable
+      ? `<div class="path"><span>${esc(w.display)}</span><span class="chip bad">folder missing</span></div><div class="nextbox">Git still lists this worktree, but its folder is gone. Spec Deck doesn't change git's list. To clean it up, run <code>git worktree prune</code> in the project. <button class="linkbtn" data-copy="git worktree prune">Copy command</button></div>`
+      : `<div class="path"><span>${esc(w.display)}</span>${w.viewing ? '<span class="chip calm">viewing</span>' : `<button class="linkbtn" data-wt="${esc(w.path)}">Switch to this worktree</button>`}<button class="linkbtn" data-wtreveal="${esc(w.path)}">Reveal</button>${w.branch ? `<button class="linkbtn" data-copy="${esc(w.branch)}">Copy branch</button>` : ""}</div>
+        ${w.changes.length ? w.changes.map(x => `<button class="dspec" data-wt="${esc(w.path)}" data-wtspec="${esc(x.id)}"><span class="chip ${x.kind === "new" ? "calm" : "warn"}" style="text-align:center">${x.kind}</span><span class="tk">${esc(x.ticket)}</span><span class="t">${esc(x.title)}${x.uncommitted.length ? ` <span class="dim">· ${plural(x.uncommitted.length, "uncommitted file")}</span>` : ""}</span>${pill(x.stage)}</button>`).join("")
+          : `<div class="dim" style="font-size:12.5px">${w.main ? "The other worktrees are compared against this one." : "No spec differs from the main worktree."}</div>`}`;
+    return `<div class="wt ${open ? "open" : ""} ${w.prunable ? "gone" : ""}"><div class="wh" data-sess="${esc(key)}" role="button" tabindex="0" aria-expanded="${open}"><span class="car">▶</span>
+      <div style="min-width:0"><div class="nm"><span class="wglyph ${w.main ? "mainwt" : isLive(w) ? "live" : ""}"></span><span>${esc(w.name)}</span>${w.opened ? '<span class="chip quiet">opened</span>' : ""}</div><div class="br">${esc(w.branch || (w.head ? "detached at " + w.head : ""))}</div></div>
+      <div class="feat">${c ? `<div class="ft">${esc(c.title)}</div><div style="display:flex;gap:8px;align-items:center;margin-top:3px">${pill(c.stage)}${c.total ? `<span class="dim" style="font-size:11.5px">${c.done}/${c.total} tasks</span>` : ""}</div>` : `<span class="dim">${w.prunable ? "—" : "no current feature"}</span>`}</div>
+      <div class="c-diff diff">${diff}</div><div class="git">${git}</div><div class="when">${w.prunable ? "" : agoTime(w.activity)}</div></div>
+      <div class="wb">${body}</div></div>`;
+  };
+  document.getElementById("main").innerHTML = `${compactNav()}
+    <div class="head"><div><h1>Worktrees</h1><div class="sub">${esc(DATA.project)} · ${plural(L.length, "worktree")} from <span class="mono">git worktree list</span> · specs compared against the main worktree</div></div></div>
+    <div class="card wts">${L.map(item).join("") || `<div class="empty">No worktrees found.</div>`}</div>
+    <div class="legend">Spec Deck reads each worktree's folder and git state. It never adds, removes or prunes worktrees.</div>`;
+}
+// Show another worktree of the project: the app reads it as if it had been opened (FR-072).
+async function switchWorktree(path, spec) {
+  const name = wtByPath(path)?.name || path.split(/[\/]/).pop();
+  const t = setTimeout(() => toast(`Reading <b>${esc(name)}</b>…`), 150);
+  let d;
+  try { d = await invoke("view_worktree", { path }); }
+  catch (e) { clearTimeout(t); toast(esc(e)); render(); return; }
+  clearTimeout(t);
+  setData(d);
+  RV.reset();
+  RV.loadCounts();
+  pullState = null;
+  checkPull(true);
+  Object.assign(state, { view: "project", stage: null, tlSel: null, modal: null });
+  toast(`Viewing worktree <b>${esc(name)}</b>`);
+  const h = spec && byId[spec] ? spec : state.nav === "worktrees" ? "worktrees" : state.nav === "all" ? "" : state.nav;
+  if (decodeURIComponent(location.hash.slice(1)) === h) route(); else location.hash = h;
+}
+function revealWorktree(path) { invoke("reveal_worktree", { path }).catch(e => toast(esc(e))); }
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-wt],[data-wtreveal]");
+  if (!el) return;
+  e.stopImmediatePropagation();
+  if (el.dataset.wtreveal) return revealWorktree(el.dataset.wtreveal);
+  const spec = el.dataset.wtspec;
+  if (wtByPath(el.dataset.wt)?.viewing) { if (spec && byId[spec]) location.hash = spec; else go("all"); return; }
+  switchWorktree(el.dataset.wt, spec);
+}, true);
+document.addEventListener("change", e => { if (e.target.matches("[data-wtsel]")) switchWorktree(e.target.value); });
 
 // ---------- project view ----------
 function renderProject() {
   if (state.nav === "timeline" && !state.stage) return renderTimeline();
+  if (state.nav === "worktrees" && !state.stage) return renderWorktrees();
   const q = state.q.trim().toLowerCase();
   let list = LISTS[state.nav];
   if (state.stage) list = list.filter(f => f.stage === state.stage);
@@ -1223,10 +1399,11 @@ function renderProject() {
 
   document.getElementById("main").innerHTML = `
     ${compactNav()}
-    <div class="head"><div><h1>${esc(title)}</h1><div class="sub">${esc(DATA.project)} · ${F.length} features · on <span class="mono">${esc(DATA.head)}</span>${pullChip()} · parsed ${new Date(DATA.generated).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</div></div>
-      <div class="tools"><input class="search" id="q" placeholder="Filter by title, ticket, branch" value="${esc(state.q)}">
+    <div class="head"><div><h1>${esc(title)}</h1><div class="sub">${esc(DATA.project)} · ${F.length} features · on <span class="mono">${esc(DATA.head)}</span>${viewingWT() && !viewingWT().opened ? ` in worktree <b>${esc(viewingWT().name)}</b>` : ""}${pullChip()} · parsed ${new Date(DATA.generated).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</div></div>
+      <div class="tools">${multiWT() ? wtSelect() : ""}<input class="search" id="q" placeholder="Filter by title, ticket, branch" value="${esc(state.q)}">
       <div class="seg"><button class="${state.group === "stage" ? "on" : ""}" data-group="stage">Stage</button><button class="${state.group === "ticket" ? "on" : ""}" data-group="ticket">Ticket</button></div></div></div>
     ${nowCard}
+    ${state.nav === "all" && !state.stage && !q ? wtOverview() : ""}
     ${pipe}
     ${state.nav === "waiting" ? `<div class="legend">Only you can unblock these: open questions, a FAIL in the latest review pass, or open HIGH/CRITICAL findings in that pass (Done specs included), or flagged conflicts on in-flight specs.</div>` : ""}
     ${state.nav === "unfinished" ? `<div class="legend">Not fully planned (no tasks yet) or partially built. "Stalled" means no commit in 14 days; "Rest deferred" means every open task sits in a phase marked Deferred.</div>` : ""}
@@ -1646,7 +1823,7 @@ let recents = [];
 let ghReady = { ok: false, login: "", message: "" };
 let splashFor = null, welcomeError = "";
 const shown = r => r.display || r.path; // the app sends a home-relative display path
-const isOpen = r => DATA && (DATA.path ? r.path === DATA.path : r.name === DATA.project);
+const isOpen = r => DATA && (DATA.path ? r.path === (DATA.opened || DATA.path) : r.name === DATA.project);
 const openedAgo = iso => { const d = days(iso); return d == null ? "" : d < 1 ? "today" : ago(iso) + " ago"; };
 
 // The welcome view and the splash take the whole window; returns true when one is showing.
@@ -1955,6 +2132,7 @@ function renderSpec() {
       <div class="actions"><button class="btn" data-folder="${esc(f.id)}">Open folder</button>${nextCmd ? `<button class="btn primary" data-copy="${nextCmd} specs/${esc(f.id)}">Copy ${nextCmd}</button>` : ""}</div>
     </div>
     ${f.status ? `<div class="statusnote"><b>${f.stageSource === "status" ? "Stage taken from this Status line (no tasks.md):" : "Status note (free text, from spec header):"}</b> ${esc(f.status)}</div>` : ""}
+    ${wtSpecNote(f)}
     ${stepper}
     <div class="kpis">
       <div class="card kpi"><div class="l">Tasks</div><div class="v">${t ? `${d}<span class="dim" style="font-size:14px">/${t}</span>` : "—"}</div><div class="s">${t ? Math.round(d / t * 100) + "% · " + f.phases.length + " phases" : "no tasks.md"}</div></div>
@@ -2036,7 +2214,9 @@ document.addEventListener("click", e => {
 document.addEventListener("change", e => {
   if (e.target.dataset.pass) { state.pass[e.target.dataset.pass] = +e.target.value; render(); return; }
   if (!e.target.matches("[data-cnav]")) return;
-  const [k, v] = e.target.value.split(":"); state.view = "project";
+  const val = e.target.value, i = val.indexOf(":"), k = val.slice(0, i), v = val.slice(i + 1);
+  if (k === "wt") return switchWorktree(v);
+  state.view = "project";
   if (k === "nav") { state.stage = null; go(v); } else { state.stage = v; go("all"); }
 });
 
@@ -2051,7 +2231,7 @@ function route() {
   if (h === "welcome" || h === "splash") { state.view = h; render(); return; }
   if (state.modal && state.modal.spec !== h) state.modal = null;
   if (byId[h]) { if (state.spec !== h) { state.dkind = "all"; state.docTab = "spec.md"; } state.view = "spec"; state.spec = h; }
-  else { state.view = "project"; state.nav = LISTS[h] ? h : "all"; }
+  else { state.view = "project"; state.nav = LISTS[h] || h === "worktrees" ? h : "all"; }
   render();
   document.getElementById("main").scrollTop = 0;
 }
@@ -2101,6 +2281,26 @@ document.addEventListener("click", e => {
 }, true);
 
 // The watcher pushes a fresh model whenever specs/ or .specify/ change on disk.
+// Another worktree changed: only the worktree summary is new.
+function setWorktrees(w) {
+  if (!DATA) return;
+  DATA.worktrees = w;
+  waitingList = F.filter(f => waiting(f).length);
+  LISTS.waiting = waitingList;
+  if (state.view !== "project" && state.view !== "spec") return;
+  const main = document.getElementById("main"), top = main.scrollTop, typing = document.activeElement?.id === "q";
+  if (typing) return; // don't steal the filter box; the next render picks it up
+  render();
+  main.scrollTop = top;
+}
+T.event.listen("worktrees-updated", e => setWorktrees(e.payload));
+// New or removed worktrees don't touch any watched folder: re-list them on focus.
+let worktreesAt = 0;
+addEventListener("focus", () => {
+  if (!DATA || Date.now() - worktreesAt < 30000) return;
+  worktreesAt = Date.now();
+  invoke("worktree_status").then(setWorktrees, () => {});
+});
 T.event.listen("project-updated", e => {
   const main = document.getElementById("main"), top = main.scrollTop;
   setData(e.payload);

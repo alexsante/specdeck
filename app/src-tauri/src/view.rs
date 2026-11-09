@@ -73,3 +73,110 @@ pub fn project(p: &Project, path: &std::path::Path) -> Value {
         "features": p.features.iter().map(feature).collect::<Vec<_>>(),
     })
 }
+
+/// Worktrees of the project (FR-071 to FR-075), shaped for the interface:
+/// - `list`: every worktree, main first, with its specs that are new or changed against the main worktree;
+/// - `copies`: per spec in the viewed worktree, the other worktrees whose copy differs from it;
+/// - `elsewhere`: specs the viewed worktree doesn't have, newest worktree activity first;
+/// - `uncommitted`: per spec, the viewed worktree's uncommitted files;
+/// - `doneEdited`: per spec, worktrees whose copy is Done and has uncommitted edits (FR-074).
+pub fn worktrees(snaps: &[speckit_core::worktree::Snapshot], viewed: &std::path::Path, opened: &std::path::Path) -> Value {
+    use speckit_core::worktree::{Snapshot, SpecCopy};
+    use std::collections::HashMap;
+    fn by_id(s: &Snapshot) -> HashMap<&str, &SpecCopy> {
+        s.specs.iter().map(|c| (c.id.as_str(), c)).collect()
+    }
+    let canon = |p: &std::path::Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    let (viewed, opened) = (canon(viewed), canon(opened));
+    let is = |s: &Snapshot, p: &std::path::Path| canon(std::path::Path::new(&s.worktree.path)) == p;
+    let name = |s: &Snapshot| std::path::Path::new(&s.worktree.path).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let copy = |c: &SpecCopy| json!({ "id": c.id, "ticket": c.ticket, "title": c.title, "stage": c.stage, "done": c.done, "total": c.total, "uncommitted": c.uncommitted });
+
+    let main = snaps.iter().find(|s| s.worktree.main).map(by_id).unwrap_or_default();
+    let view = snaps.iter().find(|s| is(s, &viewed));
+    let view_ids = view.map(by_id).unwrap_or_default();
+
+    let list: Vec<Value> = snaps
+        .iter()
+        .map(|s| {
+            let own = by_id(s);
+            let changes: Vec<Value> = if s.worktree.main {
+                vec![]
+            } else {
+                s.specs
+                    .iter()
+                    .filter_map(|c| {
+                        let kind = match main.get(c.id.as_str()) {
+                            None => "new",
+                            Some(m) if m.fingerprint != c.fingerprint => "changed",
+                            _ => return None,
+                        };
+                        let mut v = copy(c);
+                        v["kind"] = kind.into();
+                        Some(v)
+                    })
+                    .collect()
+            };
+            let current = s.current.as_ref().and_then(|cur| {
+                let id = cur.get("feature")?.as_str()?;
+                let c = own.get(id)?;
+                Some(json!({ "feature": id, "title": c.title, "stage": c.stage, "done": c.done, "total": c.total, "branch": cur.get("branch") }))
+            });
+            json!({
+                "path": s.worktree.path, "display": crate::recent::display(&s.worktree.path), "name": name(s),
+                "branch": s.worktree.branch, "head": s.worktree.head.get(..7).unwrap_or(&s.worktree.head),
+                "main": s.worktree.main, "prunable": s.worktree.prunable,
+                "opened": is(s, &opened), "viewing": is(s, &viewed),
+                "dirty": s.dirty, "ahead": s.ahead, "behind": s.behind, "activity": s.activity,
+                "specs": s.specs.len(), "current": current, "changes": changes,
+            })
+        })
+        .collect();
+
+    let mut copies: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
+    let mut elsewhere: Vec<(Option<&String>, Value)> = vec![];
+    let mut done_edited: BTreeMap<&str, Vec<String>> = BTreeMap::new();
+    let mut seen = std::collections::HashSet::new();
+    let mut order: Vec<&Snapshot> = snaps.iter().collect();
+    order.sort_by(|a, b| b.activity.cmp(&a.activity));
+    for s in order {
+        for c in &s.specs {
+            if c.stage == "Done" && !c.uncommitted.is_empty() {
+                done_edited.entry(&c.id).or_default().push(name(s));
+            }
+            if is(s, &viewed) {
+                continue;
+            }
+            match view_ids.get(c.id.as_str()) {
+                Some(v) if v.fingerprint != c.fingerprint => {
+                    // Identical copies in several worktrees make one entry, shown as the main worktree's when it has one.
+                    let list = copies.entry(&c.id).or_default();
+                    let entry = json!({ "path": s.worktree.path, "name": name(s), "main": s.worktree.main, "fingerprint": c.fingerprint,
+                        "stage": c.stage, "done": c.done, "total": c.total, "uncommitted": !c.uncommitted.is_empty(), "alsoIn": [] });
+                    match list.iter_mut().find(|e| e["fingerprint"] == c.fingerprint.as_str()) {
+                        Some(e) if s.worktree.main => {
+                            let mut also = e["alsoIn"].as_array().cloned().unwrap_or_default();
+                            also.push(e["name"].clone());
+                            *e = entry;
+                            e["alsoIn"] = also.into();
+                        }
+                        Some(e) => e["alsoIn"].as_array_mut().unwrap().push(name(s).into()),
+                        None => list.push(entry),
+                    }
+                }
+                None if seen.insert(c.id.as_str()) => {
+                    let mut v = copy(c);
+                    v["path"] = s.worktree.path.clone().into();
+                    v["name"] = name(s).into();
+                    elsewhere.push((s.activity.as_ref(), v));
+                }
+                _ => {}
+            }
+        }
+    }
+    let uncommitted: BTreeMap<&str, &Vec<String>> = view.map(|v| v.specs.iter().filter(|c| !c.uncommitted.is_empty()).map(|c| (c.id.as_str(), &c.uncommitted)).collect()).unwrap_or_default();
+    json!({
+        "list": list, "copies": copies, "elsewhere": elsewhere.into_iter().map(|(_, v)| v).collect::<Vec<_>>(),
+        "uncommitted": uncommitted, "doneEdited": done_edited,
+    })
+}

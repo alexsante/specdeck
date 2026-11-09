@@ -334,6 +334,49 @@ rep('''  RV.invalidate();
   checkPull(false);
   render();''')
 
+# ---------------------------------------------------------------- worktrees: switch, reveal, live summary (FR-071 to FR-075)
+start, end = s.index("// @wt-start"), s.index("// @wt-end") + len("// @wt-end")
+s = s[:start] + """// Show another worktree of the project: the app reads it as if it had been opened (FR-072).
+async function switchWorktree(path, spec) {
+  const name = wtByPath(path)?.name || path.split(/[\\/]/).pop();
+  const t = setTimeout(() => toast(`Reading <b>${esc(name)}</b>…`), 150);
+  let d;
+  try { d = await invoke("view_worktree", { path }); }
+  catch (e) { clearTimeout(t); toast(esc(e)); render(); return; }
+  clearTimeout(t);
+  setData(d);
+  RV.reset();
+  RV.loadCounts();
+  pullState = null;
+  checkPull(true);
+  Object.assign(state, { view: "project", stage: null, tlSel: null, modal: null });
+  toast(`Viewing worktree <b>${esc(name)}</b>`);
+  const h = spec && byId[spec] ? spec : state.nav === "worktrees" ? "worktrees" : state.nav === "all" ? "" : state.nav;
+  if (decodeURIComponent(location.hash.slice(1)) === h) route(); else location.hash = h;
+}
+function revealWorktree(path) { invoke("reveal_worktree", { path }).catch(e => toast(esc(e))); }""" + s[end:]
+rep("""T.event.listen("project-updated", e => {""", """// Another worktree changed: only the worktree summary is new.
+function setWorktrees(w) {
+  if (!DATA) return;
+  DATA.worktrees = w;
+  waitingList = F.filter(f => waiting(f).length);
+  LISTS.waiting = waitingList;
+  if (state.view !== "project" && state.view !== "spec") return;
+  const main = document.getElementById("main"), top = main.scrollTop, typing = document.activeElement?.id === "q";
+  if (typing) return; // don't steal the filter box; the next render picks it up
+  render();
+  main.scrollTop = top;
+}
+T.event.listen("worktrees-updated", e => setWorktrees(e.payload));
+// New or removed worktrees don't touch any watched folder: re-list them on focus.
+let worktreesAt = 0;
+addEventListener("focus", () => {
+  if (!DATA || Date.now() - worktreesAt < 30000) return;
+  worktreesAt = Date.now();
+  invoke("worktree_status").then(setWorktrees, () => {});
+});
+T.event.listen("project-updated", e => {""")
+
 # ---------------------------------------------------------------- review layer: real backend, shared code inlined
 start, end = s.index("// @rv-backend-start"), s.index("// @rv-backend-end") + len("// @rv-backend-end")
 s = s[:start] + """const RV = createReview({
@@ -363,5 +406,6 @@ assert "/*__DATA__*/" not in s
 assert "createMockBackend" not in s, "mockup sample data would reach the app"
 assert "archived-demo" not in s and "Opens the dropped folder" not in s, "mockup start-view samples would reach the app"
 assert 'data-toast="' not in s, "a mockup-only toast button would reach the app"
+assert "(mockup)" not in s.split("// ---------- worktrees")[1].split("// ---------- project view")[0], "mockup worktree actions would reach the app"
 open(out, "w", encoding="utf-8").write(s)
 print("wrote", out, len(s), "bytes")
