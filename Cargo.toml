@@ -5,7 +5,9 @@ members = ["crates/speckit-core", "crates/speckit-forge", "app/src-tauri"]
 [workspace.package]
 edition = "2021"
 version = "0.1.0"
-license = "UNLICENSED"
+license = "MIT OR Apache-2.0"
+authors = ["Alexander Sante <alexandersante@gmail.com>"]
+repository = "https://github.com/alexsante/speckit-mac"
 
 # Dependencies (regex especially) are slow unoptimized; optimize them even in dev builds.
 [profile.dev.package."*"]

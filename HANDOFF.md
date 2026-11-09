@@ -31,6 +31,7 @@ This file carries the context of the brainstorm session held on 2026-11-08 on th
 | Decision | Why |
 |---|---|
 | Personal tool first; may be shared with the team later | Keeps v1 free of signing, notarization, and settings. |
+| Source is open under MIT OR Apache-2.0 | Human request, 2026-11-09, so people outside the project can contribute. Signed distribution, notarization, and auto-update stay out of v1. |
 | Read-only, with one exception: "Pull now" (FR-070) | The app and the coding agent must never write the same files. "Copy next command" bridges to the workflow. On 2026-11-08 the human asked for a pull button; it runs `git pull --ff-only` only on a click and refuses while anything is uncommitted. |
 | Linux first, then macOS, then Windows; built with Rust + Tauri (see Stack decision) | Human decision, 2026-11-08. The app is built and tested on the Linux laptop today, and Tauri covers all three. |
 | Review comments go to the branch's GitHub PR (User Story 10) | No backend: GitHub holds identity, threads, permissions. All access through `gh`; GitLab later as a second adapter. Comment only, because spec and code share one PR. |

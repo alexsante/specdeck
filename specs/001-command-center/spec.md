@@ -339,3 +339,7 @@ While reading a spec, plan, or tasks file, I comment on a paragraph, list item, 
 - Q: Link the branch, and flag when a pull is needed? → A: Yes (human request). The branch links to GitHub with a copy button (FR-059). The pull badge (FR-068) uses `git ls-remote` because `git fetch` would write into `.git`; counts come from local history when the commits are already fetched, else from GitHub's compare API.
 - Q: Let me change fonts, text size, and light or dark mode? → A: Yes (human request; default Dark). An Appearance panel (sidebar, welcome view, ⌘, / Ctrl+,) with theme, interface and code fonts, and text size (FR-069). Text size scales the whole window, like browser zoom, because the stylesheet uses fixed pixel sizes; ⌘+ ⌘− ⌘0 step it.
 - Q: Let the app run `git pull` instead of copying the command? → A: Yes (human request, 2026-11-08). This relaxes the read-only rule for one explicit action (FR-002, FR-070). Guardrails, proposed by the agent: fast-forward only, refused while anything is uncommitted or a merge or rebase is in progress (so a coding agent's work in progress is never touched), no credential prompts, always a click.
+
+### Session 2026-11-09: Source contributions (human)
+
+- Q: Should people outside the project be able to contribute to the source? → A: Yes. Dual license, MIT OR Apache-2.0, with a contributing guide, code of conduct, security policy, issue and pull request templates, and CI. This does not change who the running app is for. Signed team distribution stays out of scope.
