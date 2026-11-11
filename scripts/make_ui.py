@@ -60,6 +60,7 @@ body { padding: 0 !important; overflow: hidden; }
 .doc th { background: var(--surface-2); }
 .doc blockquote { margin: 0 0 10px; padding: 4px 12px; border-left: 3px solid var(--accent); color: var(--dim); }
 .doc a { color: var(--accent); }
+.doc .mermaid.mermaid-error { text-align: left; }
 .doc .mermaid { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; text-align: center; margin: 0 0 12px; }
 .doc input[type="checkbox"] { margin-right: 6px; }
 .docfile + .docfile { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
@@ -118,8 +119,8 @@ rep('''function render() {
   state.view === "spec" ? renderSpec() : renderProject();
   if (state.view === "spec") loadDoc();''')
 rep("// ---------- detail modals ----------", '''// ---------- documents (rendered by Rust; Mermaid drawn here) ----------
-const docCache = new Map();
-let mermaidReady = null;
+const docCache = new Map(), docLoading = new Set();
+let mermaidReady = null, mermaidQueue = Promise.resolve(), mermaidSeq = 0;
 function loadMermaid() {
   mermaidReady ??= new Promise((ok, fail) => {
     const sc = document.createElement("script");
@@ -138,7 +139,18 @@ async function loadDoc() {
   const el = document.getElementById("doc");
   if (!el) return;
   const { feature, file } = el.dataset, key = `${feature}/${file}`;
-  if (docCache.has(key)) return;
+  // One load per document at a time: renders during a load would otherwise start a second one,
+  // and two Mermaid runs at once draw diagrams into each other.
+  if (docCache.has(key) || docLoading.has(key)) return;
+  docLoading.add(key);
+  try { await fillDoc(feature, file, key); }
+  finally {
+    docLoading.delete(key);
+    const cur = document.getElementById("doc"); // the view may have left and come back meanwhile
+    if (cur && !docCache.has(key) && `${cur.dataset.feature}/${cur.dataset.file}` === key) loadDoc();
+  }
+}
+async function fillDoc(feature, file, key) {
   let html;
   try { html = await invoke("read_doc", { feature, file }); }
   catch (e) { html = `<p class="dim">${esc(e)}</p>`; }
@@ -154,11 +166,28 @@ async function loadDoc() {
         const div = document.createElement("div");
         div.className = "mermaid";
         div.dataset.sourcepos = code.parentElement.dataset.sourcepos || "";
+        div.dataset.src = code.textContent; // "Copy source" in the diagram viewer
         div.textContent = code.textContent;
         code.parentElement.replaceWith(div);
         return div;
       });
-      await m.run({ nodes });
+      // Each diagram gets its own id: mermaid.run names them by the clock, so two drawn in the
+      // same millisecond collide and one is drawn into the other. A broken diagram shows its error.
+      const run = mermaidQueue.then(async () => {
+        for (const div of nodes) {
+          try {
+            const { svg, bindFunctions } = await m.render(`dg-${++mermaidSeq}`, div.dataset.src);
+            div.innerHTML = svg;
+            bindFunctions?.(div);
+          } catch (e) {
+            div.classList.add("mermaid-error");
+            div.innerHTML = `<p class="dim">This diagram could not be drawn: ${esc(e?.message || e)}</p><pre><code>${esc(div.dataset.src)}</code></pre>`;
+          }
+        }
+      });
+      mermaidQueue = run.catch(() => {});
+      await run;
+      DG.decorate(now, file); // Expand button: zoom, pan and full screen (prototype/diagram-viewer.js)
     } catch (e) { console.warn("mermaid", e); }
   }
   docCache.set(key, now.innerHTML); // cached before the review layer decorates it
@@ -399,8 +428,8 @@ rep("<script>/*__RVMOCK__*/</script>\n", "")
 import os
 proto = os.path.dirname(os.path.abspath(src))
 read = lambda n: open(os.path.join(proto, n), encoding="utf-8").read()
-rep("/*__RVCSS__*/", read("review-layer.css"))
-rep("/*__RVJS__*/", read("review-layer.js"))
+rep("/*__RVCSS__*/", read("review-layer.css") + "\n" + read("diagram-viewer.css"))
+rep("/*__RVJS__*/", read("review-layer.js") + "\n" + read("diagram-viewer.js"))
 
 assert "/*__DATA__*/" not in s
 assert "createMockBackend" not in s, "mockup sample data would reach the app"

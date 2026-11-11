@@ -2,7 +2,7 @@
 //! implementation REVIEW, re-runs), each with a verdict and findings tables.
 
 use crate::model::{Finding, Pass, Review};
-use crate::text::{clip, re, strip_md};
+use crate::text::{clip, cut, re, strip_md};
 use std::collections::HashMap;
 
 pub const SEVERITIES: [&str; 5] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
@@ -72,10 +72,12 @@ pub fn parse_findings(text: &str) -> Vec<Finding> {
             i += 1;
             continue;
         }
-        let cols: Vec<String> = cells(line).into_iter().map(|c| c.to_lowercase()).collect();
+        let names = cells(line);
+        let cols: Vec<String> = names.iter().map(|c| c.to_lowercase()).collect();
         i += 2; // skip the separator row
         while i < lines.len() && lines[i].starts_with('|') {
-            let row: HashMap<&str, String> = cols.iter().map(String::as_str).zip(cells(lines[i])).collect();
+            let raw = cells(lines[i]);
+            let row: HashMap<&str, String> = cols.iter().map(String::as_str).zip(raw.iter().cloned()).collect();
             let get = |k: &str| row.get(k).map(String::as_str).unwrap_or("");
             let first = |keys: &[&str]| keys.iter().map(|k| get(k)).find(|v| !v.is_empty()).unwrap_or("").to_string();
             let sev_raw = get("severity");
@@ -106,6 +108,12 @@ pub fn parse_findings(text: &str) -> Vec<Finding> {
                     resolved,
                     text: clip(&desc, 300),
                     fix: clip(&fix, 240),
+                    cells: names
+                        .iter()
+                        .zip(&raw)
+                        .filter(|(n, c)| !n.is_empty() && !c.is_empty())
+                        .map(|(n, c)| (strip_md(n), cut(c, 4000)))
+                        .collect(),
                 });
             }
             i += 1;

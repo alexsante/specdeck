@@ -2,7 +2,7 @@
 //! markers and clarification sessions.
 
 use crate::model::{Qa, Session, Spec, Story, StoryBody};
-use crate::text::{clip, cut, re, sections, strip_md};
+use crate::text::{clip, cut, cut_blocks, re, section_md, sections, strip_comments, strip_md};
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -11,6 +11,7 @@ re!(H1, r"(?m)^# (.+)$");
 re!(H2_START, r"(?m)^## ");
 re!(FEATURE_PREFIX, r"^Feature Specification:\s*");
 re!(HEADER, r"(?m)^\*\*([A-Za-z ][A-Za-z ]*?)\*\*:\s*(.+)$");
+re!(HEADER_LINE, r"^\*\*([A-Za-z ][A-Za-z ]*?)\*\*:\s*(.+)");
 re!(CLICKUP, r"https://app\.clickup\.com/t/\w+");
 re!(STORY, r"(?m)^###\s+(?:User Story|US)\s*(\d+)\s*[-–—:]?\s*(.*?)\s*\((?:Priority:\s*)?(P\d)\)\s*$");
 re!(MARKER, r"\[NEEDS CLARIFICATION:\s*([^\]]+)\]");
@@ -60,6 +61,14 @@ pub fn parse_story_body(body: &str) -> StoryBody {
         .map(|m| SCENARIO.captures_iter(&body[m.end()..]).map(|c| cut(c[1].trim(), 600)).collect())
         .unwrap_or_default();
     StoryBody { description: cut(desc.trim(), 900), why: field(&STORY_WHY, 500), test: field(&STORY_TEST, 600), scenarios }
+}
+
+/// Prose between the header fields and the first `## ` heading.
+fn intro_md(head: &str, n: usize) -> Option<String> {
+    let head = strip_comments(head);
+    let kept: Vec<&str> = head.split('\n').filter(|l| !l.starts_with("# ") && !HEADER_LINE.is_match(l)).collect();
+    let s = cut_blocks(kept.join("\n").trim(), n);
+    (!s.is_empty()).then_some(s)
 }
 
 pub fn parse_spec(text: &str) -> Spec {
@@ -116,6 +125,7 @@ pub fn parse_spec(text: &str) -> Spec {
         branch: (!branch.is_empty()).then_some(branch),
         created: header.get("created").cloned(),
         input: clip(get("input"), 400),
+        overview: section_md(text, &["overview", "summary"], 3000).filter(|s| !s.is_empty()).or_else(|| intro_md(head, 3000)),
         clickup,
         stories,
         fr: FR.find_iter(text).count(),

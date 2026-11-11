@@ -50,6 +50,8 @@ fn feature(f: &Feature) -> Value {
         "created": spec.and_then(|s| s.created.clone()),
         "clickup": spec.and_then(|s| s.clickup.clone()),
         "input": spec.map(|s| clip(&s.input, 260)),
+        "overview": spec.and_then(|s| s.overview.clone()),
+        "plan": f.plan,
         "fr": spec.map_or(0, |s| s.fr), "nfr": spec.map_or(0, |s| s.nfr), "sc": spec.map_or(0, |s| s.sc),
         "markers": spec.map(|s| s.markers.clone()).unwrap_or_default(),
         "stories": spec.map(|s| s.stories.iter().map(|st| json!([st.n, st.title, st.priority, st.body])).collect::<Vec<_>>()).unwrap_or_default(),

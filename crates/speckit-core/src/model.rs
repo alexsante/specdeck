@@ -25,6 +25,7 @@ pub struct Feature {
     pub files: Vec<String>,
     pub contracts: Vec<String>,
     pub spec: Option<Spec>,
+    pub plan: Option<Plan>,
     pub tasks: Option<Vec<Phase>>,
     pub review: Option<Review>,
     pub checklists: Vec<Checklist>,
@@ -43,6 +44,9 @@ pub struct Spec {
     pub branch: Option<String>,
     pub created: Option<String>,
     pub input: String,
+    /// The `## Overview` (or `## Summary`) section as markdown, else the prose
+    /// above the first `## ` heading.
+    pub overview: Option<String>,
     pub clickup: Option<String>,
     pub stories: Vec<Story>,
     pub fr: usize,
@@ -50,6 +54,15 @@ pub struct Spec {
     pub sc: usize,
     pub markers: Vec<String>,
     pub sessions: Vec<Session>,
+}
+
+/// plan.md at a glance.
+#[derive(Debug, Clone, Serialize)]
+pub struct Plan {
+    /// The `## Summary` section as markdown.
+    pub summary: Option<String>,
+    /// `## Technical Context` as [key, value] pairs, value markdown kept.
+    pub context: Vec<(String, String)>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -135,6 +148,8 @@ pub struct Finding {
     pub resolved: bool,
     pub text: String,
     pub fix: String,
+    /// The whole table row as [column, value] pairs, markdown kept.
+    pub cells: Vec<(String, String)>,
 }
 
 #[derive(Debug, Clone, Serialize)]

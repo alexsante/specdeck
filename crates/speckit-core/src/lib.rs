@@ -5,6 +5,7 @@
 //! whole: a file that is missing or unreadable simply yields no data for it.
 
 pub mod model;
+pub mod plan;
 pub mod review;
 pub mod spec;
 pub mod tasks;
@@ -119,6 +120,7 @@ pub fn read_feature(specs_dir: &Path, id: &str) -> Feature {
     };
     let contracts = if files.iter().any(|f| f == "contracts") { list_dir(&d.join("contracts")) } else { vec![] };
     let spec = read(&d.join("spec.md")).map(|t| spec::parse_spec(&t));
+    let plan = read(&d.join("plan.md")).map(|t| plan::parse_plan(&t));
     let tasks = read(&d.join("tasks.md")).map(|t| tasks::parse_tasks(&t));
     let review = read(&d.join("review.md")).map(|t| review::parse_review(&t));
     let (stage, stage_source) = derive_stage(spec.as_ref(), &files, tasks.as_deref());
@@ -130,6 +132,7 @@ pub fn read_feature(specs_dir: &Path, id: &str) -> Feature {
         checklists: parse_checklists(&d),
         files,
         spec,
+        plan,
         tasks,
         review,
         last_commit: None,

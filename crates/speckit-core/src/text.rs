@@ -60,6 +60,36 @@ pub fn cut(s: &str, n: usize) -> String {
     format!("{}…", c.trim_end())
 }
 
+re!(COMMENT, r"(?s)<!--.*?-->");
+
+/// Remove HTML comments.
+pub fn strip_comments(s: &str) -> String {
+    COMMENT.replace_all(s, "").into_owned()
+}
+
+/// Over `n` characters, cut at the last blank line before `n` so no block is split.
+pub fn cut_blocks(body: &str, n: usize) -> String {
+    if body.chars().count() <= n {
+        return body.to_string();
+    }
+    let head: String = body.chars().take(n).collect();
+    let head = match head.rfind("\n\n") {
+        Some(at) if at > 0 => &head[..at],
+        _ => &head[..],
+    };
+    format!("{}\n\n…", head.trim_end())
+}
+
+/// Markdown body of the first `## ` section whose heading starts with one of
+/// `names` (lowercase), comments removed, cut by [`cut_blocks`].
+pub fn section_md(text: &str, names: &[&str], n: usize) -> Option<String> {
+    let (_, body) = sections(text, 2).into_iter().find(|(h, _)| {
+        let h = h.to_lowercase();
+        names.iter().any(|x| h.starts_with(x))
+    })?;
+    Some(cut_blocks(strip_comments(&body).trim(), n))
+}
+
 /// Read a UTF-8 file, normalizing line endings. Missing, unreadable, or
 /// non-UTF-8 files (and directories) read as `None`.
 pub fn read(path: &std::path::Path) -> Option<String> {
@@ -73,6 +103,13 @@ mod tests {
     #[test]
     fn strips_markup() {
         assert_eq!(strip_md("**Bold** and `code` and [link](http://x)"), "Bold and code and link");
+    }
+
+    #[test]
+    fn cuts_at_blank_lines() {
+        assert_eq!(cut_blocks("aaa\n\nbbb", 20), "aaa\n\nbbb");
+        assert_eq!(cut_blocks("aaa\n\nbbbbbb", 7), "aaa\n\n…");
+        assert_eq!(section_md("# T\n\n## Summary\n\n<!-- x -->Hi.\n\n## Next\n", &["summary"], 50).as_deref(), Some("Hi."));
     }
 
     #[test]

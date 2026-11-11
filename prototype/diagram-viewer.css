@@ -1,0 +1,26 @@
+/* ---------- diagram viewer (prototype/diagram-viewer.js) ---------- */
+.doc .mermaid.dg { position: relative; cursor: zoom-in; }
+.doc .mermaid.dg:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.dg-open { all: unset; position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 11.5px; padding: 3px 9px; border-radius: 6px; color: var(--fg); background: var(--card); border: 1px solid var(--line); box-shadow: 0 1px 3px var(--shadow); opacity: 0; transition: opacity .12s; }
+.doc .mermaid.dg:hover .dg-open, .dg-open:focus-visible { opacity: 1; }
+.dg-open:hover { border-color: var(--accent); color: var(--accent); }
+.dg-lock, .dg-lock body { overflow: hidden; }
+#dgview[hidden] { display: none; }
+#dgview { position: fixed; inset: 0; z-index: 80; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); color: var(--fg); }
+.dg-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.dg-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; min-width: 0; }
+.dg-file { font-family: var(--mono); font-size: 11.5px; color: var(--dim); font-weight: 400; }
+.dg-tools { margin-left: auto; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.dg-btn { all: unset; cursor: pointer; min-width: 18px; text-align: center; padding: 4px 9px; border-radius: 6px; font-size: 12.5px; border: 1px solid var(--line); background: var(--card); white-space: nowrap; }
+.dg-btn:hover:not([disabled]) { border-color: color-mix(in srgb, var(--fg) 30%, var(--line)); }
+.dg-btn[disabled] { opacity: .4; cursor: default; }
+.dg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.dg-pct { min-width: 44px; font-variant-numeric: tabular-nums; }
+.dg-sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+.dg-stage { position: relative; overflow: hidden; cursor: grab; touch-action: none; user-select: none;
+  background-color: var(--surface-2); background-image: radial-gradient(color-mix(in srgb, var(--fg) 12%, transparent) 1px, transparent 1px); background-size: 22px 22px; }
+.dg-stage.dragging { cursor: grabbing; }
+.dg-canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.dg-canvas svg { display: block; max-width: none !important; }
+.dg-hint { padding: 6px 12px; font-size: 11.5px; color: var(--dim); border-top: 1px solid var(--line); background: var(--surface); text-align: center; }
+.dg-hint kbd { font-family: var(--mono); font-size: 10.5px; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; }

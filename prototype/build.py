@@ -22,6 +22,7 @@ def slim(f):
         "title": s.get("title") or f["slug"].replace("-", " "),
         "status": s.get("status"), "branch": s.get("branch"), "created": s.get("created"),
         "clickup": s.get("clickup"), "input": clip(s.get("input"), 260),
+        "overview": s.get("overview"), "plan": f.get("plan"),
         "fr": s.get("fr", 0), "nfr": s.get("nfr", 0), "sc": s.get("sc", 0),
         "markers": s.get("markers", []),
         "stories": [[st["n"], st["title"], st["priority"], st.get("body")] for st in s.get("stories", [])],
