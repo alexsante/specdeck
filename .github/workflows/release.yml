@@ -118,7 +118,7 @@ jobs:
 
       - name: Keep the installers on manual runs
         if: github.ref_type != 'tag'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: spec-deck-${{ needs.version.outputs.version }}-${{ runner.os }}
           path: ${{ join(fromJSON(steps.tauri.outputs.artifactPaths), fromJSON('"\n"')) }}
