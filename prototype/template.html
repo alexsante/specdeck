@@ -162,9 +162,6 @@ a:hover { text-decoration: underline; }
 /* ---------- spec view ---------- */
 .crumbs { display: flex; align-items: center; gap: 6px; color: var(--dim); font-size: 12px; margin-bottom: 10px; }
 .crumbs button { all: unset; cursor: pointer; color: var(--accent); }
-.spechead { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
-.spechead h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.01em; }
-.spechead .meta { display: flex; gap: 14px; flex-wrap: wrap; color: var(--dim); font-size: 12px; align-items: center; }
 .actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
 .btn { all: unset; cursor: pointer; padding: 5px 10px; border: 1px solid var(--line); border-radius: 7px; font-size: 12px; background: var(--card); white-space: nowrap; }
 .btn:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
@@ -180,15 +177,43 @@ a:hover { text-decoration: underline; }
 .step.done { color: var(--fg); } .step.done::before { background: var(--ok); border-color: var(--ok); } .step.done::after { background: var(--ok); }
 .step.cur { color: var(--accent); font-weight: 700; } .step.cur::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); } .step.cur::after { background: var(--ok); }
 
-.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
-.kpi { padding: 10px 12px; }
-.kpi .l { font-size: 11px; color: var(--dim); }
-.kpi .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; margin-top: 2px; }
-.kpi .s { font-size: 11.5px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@container (max-width: 820px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-.grid2 { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; margin-top: 18px; align-items: start; }
-@container (max-width: 980px) { .grid2 { grid-template-columns: 1fr; } }
+/* ---------- spec header: identity, stage and four numbers in one calm card ---------- */
+.hero { padding: 18px 20px 0; }
+.hero-top { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.hero-id { min-width: 0; flex: 1 1 380px; }
+.hero h1 { margin: 0 0 6px; font-size: 21px; letter-spacing: -.015em; line-height: 1.25; }
+.hero-meta { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; color: var(--dim); font-size: 12px; }
+.hero-meta a { color: var(--dim); }
+.hero-meta a:hover { color: var(--accent); }
+.hero-meta .flag { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; color: var(--dim); background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.hero-meta .flag:hover { color: var(--fg); }
+.hero-meta .flag.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 13%, transparent); }
+.hero-meta .flag.on { box-shadow: inset 0 0 0 1px currentColor; }
+.hero-notes { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.hero-notes .statusnote, .hero-notes .wtbar { margin: 0; }
+.hero .stepper { margin: 22px 0 18px; }
+.hero .step { font-size: 11px; }
+.hero-stats { display: grid; grid-template-columns: repeat(4, minmax(96px, auto)) minmax(0, 1fr); margin: 0 -20px; border-top: 1px solid var(--line); }
+.stat { all: unset; box-sizing: border-box; min-width: 0; padding: 12px 20px 14px; border-left: 1px solid var(--line); }
+.stat:first-child { border-left: 0; }
+.stat .l { font-size: 11px; color: var(--dim); }
+.stat .v { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; line-height: 1.2; }
+.stat .v small { font-size: 13px; color: var(--dim); font-weight: 500; }
+.stat .v.bad { color: var(--bad); }
+.stat .bar { width: 44px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.stat .bar i { display: block; height: 100%; background: var(--ok); }
+.stat[data-wtab] { cursor: pointer; }
+.stat[data-wtab]:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.stat.next { cursor: pointer; display: flex; flex-direction: column; justify-content: flex-start; text-align: left; }
+.stat.next:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.stat.next .v { font-size: 13px; font-weight: 500; gap: 8px; }
+.stat.next .v .mono { color: var(--accent); font-weight: 650; }
+.stat.next .v .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.stat.next .v .go { margin-left: auto; color: var(--dim); }
+@container (max-width: 980px) { .hero-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } .stat.next { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); } }
+@container (max-width: 600px) { .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat:nth-child(3) { border-left: 0; } .stat:nth-child(n+3) { border-top: 1px solid var(--line); } .hero .step { font-size: 0; } .hero .step.cur { font-size: 11px; } }
+
 .panel > header { padding: 10px 14px; border-bottom: 1px solid var(--line); font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .panel > header .r { margin-left: auto; color: var(--dim); font-weight: 400; font-size: 12px; }
 .nextbox { margin: 10px 14px 4px; padding: 9px 11px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); font-size: 12.5px; }
@@ -227,6 +252,25 @@ a:hover { text-decoration: underline; }
 .finding .fix { color: var(--dim); font-size: 12px; margin-top: 3px; }
 .finding > div:nth-child(2) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .finding .fix { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* ---------- one tabbed panel: tasks, stories, review, decisions ---------- */
+.work { margin-top: 14px; }
+.wtabs { display: flex; align-items: stretch; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.wtabs button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 11px 10px 10px; font-size: 13px; font-weight: 600; color: var(--dim); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.wtabs button:hover { color: var(--fg); }
+.wtabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+.wtabs .n { font-size: 11px; font-weight: 500; color: var(--dim); font-variant-numeric: tabular-nums; }
+.wtabs .verdict { font-size: 9.5px; padding: 1px 5px; }
+.wtabs .r { margin-left: auto; align-self: center; padding-left: 12px; font-size: 12px; color: var(--dim); font-weight: 400; white-space: nowrap; }
+@container (max-width: 700px) { .wtabs .r { display: none; } }
+.finding { cursor: pointer; }
+.finding:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.mfind[data-finding] { cursor: pointer; }
+.mfind[data-finding]:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.fdetail { display: grid; grid-template-columns: minmax(90px, max-content) minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 13px; }
+.fdetail dt { color: var(--dim); }
+.fdetail dd { margin: 0; overflow-wrap: anywhere; }
+.fixbox { padding: 11px 13px; border-radius: var(--r-sm); border: 1px solid color-mix(in srgb, var(--ok) 30%, var(--line)); background: color-mix(in srgb, var(--ok) 6%, transparent); font-size: 13px; line-height: 1.6; }
+.fhist { display: flex; flex-direction: column; gap: 6px; }
 .panel .none-msg { padding: 14px; color: var(--dim); font-size: 12.5px; }
 
 .dfilters { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
@@ -440,7 +484,37 @@ a:hover { text-decoration: underline; }
 .task, .story { cursor: pointer; }
 .task:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); border-radius: 5px; }
 .story:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
-.nextbox, .kpi.clickable { cursor: pointer; }
+.nextbox { cursor: pointer; }
+/* ---------- at a glance: spec overview and plan summary ---------- */
+.ov { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 14px; }
+.ov > section { min-width: 0; padding: 12px 16px 4px; }
+.ov > section + section { border-left: 1px solid var(--line); }
+.ov .ovh { display: flex; align-items: baseline; gap: 8px; font-weight: 600; margin-bottom: 6px; }
+.ov .ovh .r { margin-left: auto; font-weight: 400; font-size: 12px; color: var(--dim); }
+.ov .ovb { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.ov:not(.full) .ovb { max-height: 240px; overflow: hidden; }
+.ov.clipped:not(.full) .ovb { -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent); mask-image: linear-gradient(to bottom, #000 70%, transparent); }
+.ov .ovb > :first-child { margin-top: 0; }
+.ov .ovb p, .ov .ovb ul, .ov .ovb ol, .ov .ovb table, .ov .ovb pre, .ov .ovb blockquote { margin: 0 0 9px; }
+.ov .ovb ul, .ov .ovb ol { padding-left: 20px; }
+.ov .ovb h4 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--dim); margin: 12px 0 4px; }
+.ov .ovb code { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); border: 1px solid var(--line); padding: 0 3px; border-radius: 4px; }
+.ov .ovb pre { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; font-size: 11.5px; }
+.ov .ovb pre code { border: 0; padding: 0; background: none; }
+.ov .ovb table { border-collapse: collapse; font-size: 12px; display: block; overflow-x: auto; }
+.ov .ovb th, .ov .ovb td { border: 1px solid var(--line); padding: 4px 7px; text-align: left; vertical-align: top; }
+.ov .ovb th { background: var(--surface-2); }
+.ov .ovb blockquote { padding: 2px 10px; border-left: 3px solid var(--line); color: var(--dim); }
+.ov .ctx { display: grid; grid-template-columns: minmax(90px, max-content) minmax(0, 1fr); gap: 4px 12px; margin: 10px 0 9px; padding-top: 9px; border-top: 1px dashed var(--line); font-size: 12.5px; }
+.ov .ctx:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.ov .ctx dt { color: var(--dim); }
+.ov .ctx dd { margin: 0; }
+.ov .src { color: var(--dim); font-size: 11.5px; margin-bottom: 6px; }
+.ov .none-msg { padding: 2px 0 12px; color: var(--dim); font-size: 12.5px; }
+.ov > footer { grid-column: 1 / -1; display: none; justify-content: center; border-top: 1px solid var(--line); padding: 5px; }
+.ov.clipped > footer, .ov.full > footer { display: flex; }
+.ov > footer .linkbtn { margin: 0; }
+@container (max-width: 980px) { .ov { grid-template-columns: 1fr; } .ov > section + section { border-left: 0; border-top: 1px solid var(--line); } }
 .mdlink { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
 .mdlink:hover { text-decoration-style: solid; }
 
@@ -664,6 +738,7 @@ const STAGE_COLOR = {
 };
 const NEXT_CMD = { Specified: "/speckit-clarify", Clarified: "/speckit-plan", Planned: "/speckit-tasks",
   Tasked: "/speckit-analyze", Analyzed: "/speckit-implement", Building: "/speckit-implement" };
+const WTABS = [["tasks", "Tasks"], ["stories", "User stories"], ["review", "Review"], ["decisions", "Decisions"]];
 const KIND_LABEL = { human: "Human", agent: "Agent", flagged: "Flagged", unlabeled: "Unattributed" };
 const DOC_ORDER = ["spec.md", "plan.md", "research.md", "data-model.md", "quickstart.md", "contracts", "tasks.md", "checklists", "review.md", "deployment.md"];
 
@@ -671,7 +746,7 @@ const F = DATA.features;
 const byId = Object.fromEntries(F.map(f => [f.id, f]));
 const NOW = new Date(DATA.generated);
 
-const state = { view: "project", spec: null, nav: "all", stage: null, q: "", group: "stage", showDone: false, docTab: "spec.md", dkind: "all", open: new Set(), pass: {},
+const state = { view: "project", spec: null, nav: "all", stage: null, q: "", group: "stage", showDone: false, docTab: "spec.md", wtab: "tasks", dkind: "all", open: new Set(), pass: {},
   zoom: "month", tlRange: "flight", tlGroup: "ticket", tlCollapsed: new Set(), tlSel: null, tlCenter: true, modal: null };
 
 // ---------- derived ----------
@@ -1413,11 +1488,70 @@ function mdInline(s, base) {
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*(.+?)\*\*/g, (m, x) => /^(given|when|then|and)$/i.test(x) ? `<b class="gwt gwt-${x.toLowerCase()}">${x}</b>` : `<b>${x}</b>`);
 }
+// Block markdown for the overview card: headings, paragraphs, lists, tables, quotes, code.
+function mdBlocks(md, base) {
+  const lines = String(md || "").split("\n"), out = [], inl = x => mdInline(x, base);
+  const isRow = l => /^\s*\|/.test(l);
+  const isSep = l => /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(l);
+  const cells = l => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(c => c.trim());
+  const ITEM = /^\s*(?:[-*+]|\d+[.)])\s+(.*)$/;
+  const starts = l => /^(```|#{1,6}\s|>)/.test(l) || ITEM.test(l) || isRow(l);
+  for (let i = 0; i < lines.length;) {
+    const l = lines[i];
+    if (!l.trim()) { i++; continue; }
+    if (/^```/.test(l)) {
+      const b = []; i++;
+      while (i < lines.length && !/^```/.test(lines[i])) b.push(lines[i++]);
+      i++; out.push(`<pre><code>${esc(b.join("\n"))}</code></pre>`); continue;
+    }
+    const h = l.match(/^#{1,6}\s+(.*)$/);
+    if (h) { out.push(`<h4>${inl(h[1])}</h4>`); i++; continue; }
+    if (isRow(l) && i + 1 < lines.length && isSep(lines[i + 1])) {
+      const head = cells(l), rows = []; i += 2;
+      while (i < lines.length && isRow(lines[i])) rows.push(cells(lines[i++]));
+      out.push(`<table><thead><tr>${head.map(c => `<th>${inl(c)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${inl(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`);
+      continue;
+    }
+    if (/^>/.test(l)) {
+      const b = [];
+      while (i < lines.length && /^>/.test(lines[i])) b.push(lines[i++].replace(/^>\s?/, ""));
+      out.push(`<blockquote>${inl(b.join(" "))}</blockquote>`); continue;
+    }
+    if (ITEM.test(l)) {
+      const ordered = /^\s*\d/.test(l), items = [];
+      while (i < lines.length && lines[i].trim() && !/^(```|#{1,6}\s|>)/.test(lines[i]) && !isRow(lines[i])) {
+        const m = lines[i].match(ITEM);
+        if (m) items.push(m[1]); else items[items.length - 1] += " " + lines[i].trim();
+        i++;
+      }
+      const tag = ordered ? "ol" : "ul";
+      out.push(`<${tag}>${items.map(x => `<li>${inl(x)}</li>`).join("")}</${tag}>`); continue;
+    }
+    const b = [l]; i++;
+    while (i < lines.length && lines[i].trim() && !starts(lines[i])) b.push(lines[i++]);
+    out.push(`<p>${inl(b.join(" "))}</p>`);
+  }
+  return out.join("");
+}
+// The overview card is clipped until opened; its toggle shows only when something is hidden.
+function fitOverview() {
+  const ov = document.querySelector(".ov");
+  if (!ov || ov.classList.contains("full")) return;
+  ov.classList.toggle("clipped", [...ov.querySelectorAll(".ovb")].some(b => b.scrollHeight > b.clientHeight + 2));
+}
 const allTasks = f => f.phases.flatMap((p, pi) => (p.tasks || []).map(t => ({ p, pi, t })));
-const findingsFor = (f, pred) => (f.review?.passes || []).flatMap((p, i, all) => p.findings.filter(pred).map(x => ({ ...x, pass: p, latest: i === all.length - 1 })));
+const findingsFor = (f, pred) => (f.review?.passes || []).flatMap((p, i, all) => p.findings.map((x, fi) => ({ ...x, pass: p, latest: i === all.length - 1, key: `${i}:${fi}` })).filter(pred));
+const SEV_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
+// A pass's findings in the order the panel lists them: by severity, then as written.
+const passOrder = p => p.findings.map((x, fi) => ({ x, fi })).sort((a, b) => SEV_ORDER.indexOf(a.x.severity) - SEV_ORDER.indexOf(b.x.severity) || a.fi - b.fi);
+// Table cells may carry <br> line breaks; everything else is inline markdown.
+const mdCell = (s, base) => String(s ?? "").split(/<br\s*\/?>/i).map(x => mdInline(x, base)).join("<br>");
+const colName = k => k.replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+const FIND_TEXT = ["finding", "summary", "description", "issue", "evidence"];
+const FIND_FIX = ["recommended fix", "recommendation", "suggestion", "resolution"];
 function storyTasks(f, n) { return allTasks(f).filter(x => x.t[3] === "US" + n); }
 function findingRow(x) {
-  return `<div class="mfind ${x.resolved ? "resolved" : ""}"><div class="fh"><span class="chip s-${x.severity}">${x.severity}</span><span class="mono">${esc(x.id)}</span>
+  return `<div class="mfind ${x.resolved ? "resolved" : ""}" data-finding="${x.key}" title="Open finding ${esc(x.id)}"><div class="fh"><span class="chip s-${x.severity}">${x.severity}</span><span class="mono">${esc(x.id)}</span>
     <span class="dim">${esc(x.pass.gate || "Review")}${x.pass.date ? " · " + esc(x.pass.date) : ""}${x.latest ? " · latest pass" : " · earlier pass"}</span>${x.status ? `<span class="dim" style="margin-left:auto">${esc(x.status)}</span>` : ""}</div>
     <div>${esc(x.text)}</div></div>`;
 }
@@ -1471,12 +1605,38 @@ function storyModal(f, n) {
   <footer class="df"><span class="hint"><kbd>←</kbd> <kbd>→</kbd> step through stories · <kbd>Esc</kbd> close</span>
     <button class="btn" data-copy="specs/${esc(f.id)}/spec.md US${sn}">Copy reference</button><button class="btn" data-openpath="specs/${esc(f.id)}/spec.md">Open spec.md</button></footer>`;
 }
+function findingModal(f, key) {
+  const [pi, fi] = String(key).split(":").map(Number), passes = f.review?.passes || [], P = passes[pi], x = P?.findings[fi];
+  if (!x) return null;
+  const order = passOrder(P), i = order.findIndex(o => o.fi === fi), base = `specs/${esc(f.id)}/`;
+  const cells = x.cells || [], low = c => c[0].toLowerCase();
+  const textCell = FIND_TEXT.map(k => cells.find(c => low(c) === k)).find(Boolean);
+  const fixCell = FIND_FIX.map(k => cells.find(c => low(c) === k)).find(Boolean);
+  const rest = cells.filter(c => c !== textCell && c !== fixCell && !["id", "severity"].includes(low(c)));
+  const tasks = allTasks(f).filter(o => (x.tasks || []).includes(o.t[0]));
+  const stories = f.stories.filter(st => (x.stories || []).includes("US" + st[0]));
+  const others = x.id ? findingsFor(f, y => y.id === x.id && y.key !== key) : [];
+  const status = x.resolved ? `<span class="st st-done">Resolved</span>` : `<span class="st st-open">Open</span>`;
+  return `${modalHeader(i, order.length, "finding")}
+  <div class="db">
+    <div class="eyebrow2"><span class="mono">${esc(f.ticket)}</span> · ${esc(f.title)} · Pass ${pi + 1} of ${passes.length}${pi === passes.length - 1 ? " (latest)" : ""}${P.gate ? " · " + esc(P.gate) : ""}${P.verdict ? " " + P.verdict : ""}${P.date ? " · " + esc(P.date) : ""}</div>
+    <h2 id="dlg-title"><span class="chip s-${x.severity}">${x.severity}</span><span class="mono">${esc(x.id || "Finding")}</span>${status}</h2>
+    <p class="lead">${textCell ? mdCell(textCell[1], base) : esc(x.text)}</p>
+    ${fixCell || x.fix ? `<section><h3>${esc(fixCell ? colName(fixCell[0]) : "Fix")}</h3><div class="fixbox">${fixCell ? mdCell(fixCell[1], base) : esc(x.fix)}</div></section>` : ""}
+    ${rest.length ? `<section><h3>Details</h3><dl class="fdetail">${rest.map(([k, v]) => `<dt>${esc(colName(k))}</dt><dd>${mdCell(v, base)}</dd>`).join("")}</dl></section>` : ""}
+    ${stories.length ? `<section><h3>User stories<span class="dim">${stories.length}</span></h3>${stories.map(st => { const ts = storyTasks(f, st[0]); return `<button class="storycard" data-story="${st[0]}"><span class="pr ${st[2]}">${st[2]}</span><span><span class="dim">US${st[0]}</span> ${esc(st[1])}</span>${prog(ts.filter(o => o.t[1]).length, ts.length)}</button>`; }).join("")}</section>` : ""}
+    ${tasks.length ? `<section><h3>Tasks<span class="dim">${tasks.length}</span></h3><div class="mtasks">${tasks.map(({ t }) => `<div class="mtask ${t[1] ? "done" : ""} ${f.next?.[0] === t[0] ? "next" : ""}" data-task="${esc(t[0])}"><span class="cb"></span><span class="mono dim">${esc(t[0])}</span><span class="tx">${esc(t[4])}</span></div>`).join("")}</div></section>` : ""}
+    ${others.length ? `<section><h3>${esc(x.id)} in other passes<span class="dim">${others.length}</span></h3><div class="fhist">${others.map(findingRow).join("")}</div></section>` : ""}
+  </div>
+  <footer class="df"><span class="hint"><kbd>←</kbd> <kbd>→</kbd> step through this pass · <kbd>Esc</kbd> close</span>
+    <button class="btn" data-copy="specs/${esc(f.id)}/review.md ${esc(x.id)}">Copy reference</button><button class="btn" data-openpath="specs/${esc(f.id)}/review.md">Open review.md</button></footer>`;
+}
 // Opens a repo-relative path with the system's default app (the app build replaces this).
 function openPath(p) { toast(`Opens <code>${esc(p)}</code> in your editor (mockup)`); }
 
 function renderModal() {
   const host = document.getElementById("modal"), m = state.modal, f = m && byId[m.spec];
-  const html = f && (m.type === "task" ? taskModal(f, m.key) : storyModal(f, +m.key));
+  const html = f && (m.type === "task" ? taskModal(f, m.key) : m.type === "finding" ? findingModal(f, m.key) : storyModal(f, +m.key));
   if (!html) { host.hidden = true; host.innerHTML = ""; state.modal = null; return; }
   const scroll = host.querySelector(".db")?.scrollTop, same = host.dataset.key === `${m.spec}|${m.type}|${m.key}`;
   host.hidden = false;
@@ -1489,6 +1649,7 @@ function stepModal(dir) {
   const m = state.modal, f = m && byId[m.spec];
   if (!f) return;
   if (m.type === "task") { const all = allTasks(f), i = all.findIndex(x => x.t[0] === m.key), n = all[i + dir]; if (n) m.key = n.t[0]; }
+  else if (m.type === "finding") { const [pi, fi] = m.key.split(":").map(Number), o = passOrder(f.review.passes[pi]), n = o[o.findIndex(y => y.fi === fi) + dir]; if (n) m.key = `${pi}:${n.fi}`; }
   else { const i = f.stories.findIndex(x => x[0] === +m.key), n = f.stories[i + dir]; if (n) m.key = n[0]; }
   renderModal();
 }
@@ -1498,7 +1659,8 @@ function renderSpec() {
   const f = byId[state.spec];
   const [d, t] = tot(f), c = dec(f);
   const si = STAGES.indexOf(f.stage);
-  const stepper = f.stage === "Fragment" ? "" : `<div class="stepper">${STAGES.map((s, i) => `<div class="step ${i < si || f.stage === "Done" ? "done" : i === si ? "cur" : ""}">${s}</div>`).join("")}</div>`;
+  const fromStatus = f.stageSource === "status";
+  const stepper = f.stage === "Fragment" ? "" : `<div class="stepper">${STAGES.map((s, i) => `<div class="step ${i < si || f.stage === "Done" ? "done" : i === si ? "cur" : ""}" ${i === si && fromStatus ? 'title="Stage taken from the spec Status line (no tasks.md)"' : ""}>${s}${i === si && fromStatus ? "*" : ""}</div>`).join("")}</div>`;
   const nextCmd = NEXT_CMD[f.stage];
 
   // stories x tasks
@@ -1523,19 +1685,18 @@ function renderSpec() {
   const pi = Math.min(state.pass[f.id] ?? passes.length - 1, passes.length - 1);
   const P = passes[pi];
   const showResolved = state.open.has(f.id + "#resolved");
-  const passF = P ? [...P.findings].sort((a, b) => sev.indexOf(a.severity) - sev.indexOf(b.severity)) : [];
+  const passF = P ? passOrder(P).map(({ x, fi }) => ({ ...x, key: `${pi}:${fi}` })) : [];
   const resolvedN = passF.filter(x => x.resolved).length;
   const allF = showResolved ? passF : passF.filter(x => !x.resolved);
-  const showAll = state.open.has(f.id + "#findings");
-  const shownF = showAll ? allF : allF.slice(0, 4);
+  const shownF = allF;
   const sevCounts = sev.map(s => [s, allF.filter(x => x.severity === s).length]).filter(([, n]) => n);
   const passBar = passes.length ? `<div class="passes">${passes.length > 1 ? `<label class="dim" for="pass-${esc(f.id)}">Pass</label>
       <select id="pass-${esc(f.id)}" data-pass="${esc(f.id)}">${passes.map((p, i) => `<option value="${i}" ${i === pi ? "selected" : ""}>${i + 1} of ${passes.length}${i === passes.length - 1 ? " (latest)" : ""} · ${esc(p.label)}</option>`).join("")}</select>` : ""}
       ${P.gate ? `<span class="chip k-unlabeled">${esc(P.gate)}</span>` : ""}${verdict(P)}${pi < passes.length - 1 ? `<span class="chip calm">Earlier pass</span>` : ""}
       ${resolvedN ? `<button class="linkbtn" data-sess="${esc(f.id)}#resolved">${showResolved ? "Hide" : "Show"} ${resolvedN} resolved</button>` : ""}</div>` : "";
   const findings = f.review ? passBar + (allF.length ? `<div class="dfilters">${sevCounts.map(([s, n]) => `<span class="chip s-${s}">${n} ${s}</span>`).join("")}</div>` + shownF.map(x => `
-      <div class="finding ${x.resolved ? "resolved" : ""}"><div class="fh"><span class="chip s-${x.severity}">${x.severity}</span><span class="mono">${esc(x.id)}</span>${x.owner ? `<span class="dim" style="font-size:11.5px">${esc(x.owner)}</span>` : ""}${x.status ? `<span class="dim" style="font-size:11.5px;margin-left:auto">${esc(x.status)}</span>` : ""}</div>
-      <div>${esc(x.text)}</div>${x.fix ? `<div class="fix">Fix: ${esc(x.fix)}</div>` : ""}</div>`).join("") + (allF.length > 4 ? `<div class="finding"><button class="btn" data-sess="${esc(f.id)}#findings">${showAll ? "Show fewer" : `Show all ${allF.length} findings`}</button></div>` : "") : `<div class="none-msg">${passF.length ? "All findings in this pass are resolved." : "No findings in this pass."}</div>`) : `<div class="none-msg">No review.md yet.</div>`;
+      <div class="finding ${x.resolved ? "resolved" : ""}" data-finding="${x.key}"><div class="fh"><span class="chip s-${x.severity}">${x.severity}</span><span class="mono">${esc(x.id)}</span>${x.owner ? `<span class="dim" style="font-size:11.5px">${esc(x.owner)}</span>` : ""}${x.status ? `<span class="dim" style="font-size:11.5px;margin-left:auto">${esc(x.status)}</span>` : ""}</div>
+      <div>${esc(x.text)}</div>${x.fix ? `<div class="fix">Fix: ${esc(x.fix)}</div>` : ""}</div>`).join("") : `<div class="none-msg">${passF.length ? "All findings in this pass are resolved." : "No findings in this pass."}</div>`) : `<div class="none-msg">No review.md yet.</div>`;
   const openInLatest = (latest(f)?.findings || []).filter(x => !x.resolved).length;
 
   const kinds = ["all", "agent", "flagged", "human", "unlabeled"];
@@ -1549,6 +1710,44 @@ function renderSpec() {
         <div class="qa">${s.qa.length ? s.qa.map(([q, a]) => `<div><div class="q">${esc(q)}</div><div class="a">${esc(a)}</div></div>`).join("") : `<div class="trimmed">${s.n ? "Q&amp;A text trimmed for finished specs in this mockup." : "No Q → A lines in this session."}</div>`}</div></div>`;
     }).join("") || `<div class="none-msg">None of this kind.</div>`) : `<div class="none-msg">No clarification sessions.</div>`;
 
+  // At a glance: what the spec is for (spec.md) and how the plan builds it (plan.md).
+  const base = `specs/${esc(f.id)}/`;
+  const readLink = (file, label) => f.files.includes(file) ? `<button class="mdlink" data-doc="${file}" data-jump>${label}</button>` : "";
+  const ovSpec = f.overview ? mdBlocks(f.overview, base)
+    : f.input ? `<div class="src">From the Input line (spec.md has no Overview section)</div><p>${esc(f.input)}</p>`
+    : `<div class="none-msg">spec.md has no Overview or Summary section.</div>`;
+  const pl = f.plan;
+  const ovPlan = !pl ? `<div class="none-msg">No plan.md yet.${f.stage === "Specified" || f.stage === "Clarified" ? ` Next step: <span class="mono">/speckit-plan</span>` : ""}</div>`
+    : !pl.summary && !pl.context.length ? `<div class="none-msg">plan.md has no Summary or Technical Context section.</div>`
+    : (pl.summary ? mdBlocks(pl.summary, base) : "") + (pl.context.length ? `<dl class="ctx">${pl.context.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${mdInline(v, base)}</dd>`).join("")}</dl>` : "");
+  const ovFull = state.open.has(f.id + "#ov");
+  const overview = f.stage === "Fragment" ? "" : `<div class="card ov ${ovFull ? "full" : ""}">
+      <section><div class="ovh">Overview<span class="r">${readLink("spec.md", "Read spec.md")}</span></div><div class="ovb">${ovSpec}</div></section>
+      <section><div class="ovh">Plan<span class="r">${readLink("plan.md", "Read plan.md")}</span></div><div class="ovb">${ovPlan}</div></section>
+      <footer><button class="linkbtn" data-sess="${esc(f.id)}#ov">${ovFull ? "Show less" : "Show all"}</button></footer></div>`;
+
+  // Tasks, user stories, review and decisions share one tabbed panel.
+  const wtab = state.wtab;
+  const wtabBadge = {
+    tasks: `<span class="n">${t ? `${d}/${t}` : "0"}</span>`,
+    stories: `<span class="n">${f.stories.length}</span>`,
+    review: f.review?.verdict ? `<span class="verdict v-${f.review.verdict}">${f.review.verdict}</span>${openInLatest ? `<span class="n">${openInLatest} open</span>` : ""}` : `<span class="n">—</span>`,
+    decisions: `<span class="n">${f.sessions.reduce((a, x) => a + x.n, 0)}</span>`,
+  };
+  const wtabNote = {
+    tasks: t ? `${d} of ${t} done · ${plural(f.phases.length, "phase")}` : "",
+    stories: f.stories.length ? "Progress from [US#] task tags" : "",
+    review: f.review ? `${plural(passes.length, "pass")} in review.md` : "",
+    decisions: f.sessions.length ? "## Clarifications sessions, by who decided" : "",
+  };
+  const wtabBody = { tasks: phases, stories, review: findings, decisions };
+
+  // Free-text notes stay out of the way: a flag in the meta row opens them.
+  const wtNote = wtSpecNote(f), unc = (wts().uncommitted[f.id] || []).length, copies = (wts().copies[f.id] || []).length;
+  const notes = (f.status ? `<div class="statusnote"><b>${fromStatus ? "Stage taken from this Status line (no tasks.md):" : "Status line:"}</b> ${esc(f.status)}</div>` : "") + wtNote;
+  const notesOpen = state.open.has(f.id + "#notes") || fromStatus;
+  const noteFlags = notes ? `<button class="flag ${unc || copies ? "warn" : ""} ${notesOpen ? "on" : ""}" data-sess="${esc(f.id)}#notes">${[f.status && "Status note", unc && plural(unc, "uncommitted file"), copies && "Differs in another worktree"].filter(Boolean).join(" · ")}</button>` : "";
+
   const docs = DOC_ORDER.filter(x => f.files.includes(x)).concat(f.files.filter(x => !DOC_ORDER.includes(x)));
   if (!docs.includes(state.docTab)) state.docTab = docs[0];
   const docBody = state.docTab === "spec.md" ? `<h3>${esc(f.title)}</h3><div class="dim">${esc(f.input || "")}</div>
@@ -1558,35 +1757,35 @@ function renderSpec() {
 
   document.getElementById("main").innerHTML = `
     <div class="crumbs"><button data-back>‹ ${esc(DATA.project)}</button><span>/</span><span class="mono">${esc(f.ticket)}</span><span>/</span><span class="mono">${esc(f.slug)}</span></div>
-    <div class="spechead"><div style="min-width:0;flex:1 1 380px">
-        <h1>${esc(f.title)}</h1>
-        <div class="meta">${pill(f.stage, f.stageSource)}<span class="tk">${esc(f.ticket)}</span>${branchHtml(f.branch)}${RV.chip(f)}${f.created ? `<span>Created ${esc(f.created)}</span>` : ""}<span>Last commit ${ago(f.lastCommit)} ago</span>${f.clickup ? `<a href="${esc(f.clickup)}" target="_blank" rel="noopener">ClickUp ↗</a>` : ""}</div>
+    <header class="card hero">
+      <div class="hero-top">
+        <div class="hero-id">
+          <h1>${esc(f.title)}</h1>
+          <div class="hero-meta">${f.stage === "Fragment" ? pill(f.stage, f.stageSource) : ""}${branchHtml(f.branch)}${RV.chip(f)}<span title="${f.created ? `Created ${esc(f.created)}` : ""}">${f.lastCommit ? `Updated ${ago(f.lastCommit)} ago` : f.created ? `Created ${esc(f.created)}` : "Not committed yet"}</span>${f.clickup ? `<a href="${esc(f.clickup)}" target="_blank" rel="noopener">ClickUp ↗</a>` : ""}${noteFlags}</div>
+        </div>
+        <div class="actions"><button class="btn" data-toast="Opened folder in editor">Open in editor</button><button class="btn" data-toast="Revealed in Finder">Reveal</button>${nextCmd ? `<button class="btn primary" data-copy="${nextCmd} specs/${esc(f.id)}">Copy ${nextCmd}</button>` : ""}</div>
       </div>
-      <div class="actions"><button class="btn" data-toast="Opened folder in editor">Open in editor</button><button class="btn" data-toast="Revealed in Finder">Reveal</button>${nextCmd ? `<button class="btn primary" data-copy="${nextCmd} specs/${esc(f.id)}">Copy ${nextCmd}</button>` : ""}</div>
-    </div>
-    ${f.status ? `<div class="statusnote"><b>${f.stageSource === "status" ? "Stage taken from this Status line (no tasks.md):" : "Status note (free text, from spec header):"}</b> ${esc(f.status)}</div>` : ""}
-    ${wtSpecNote(f)}
-    ${stepper}
-    <div class="kpis">
-      <div class="card kpi"><div class="l">Tasks</div><div class="v">${t ? `${d}<span class="dim" style="font-size:14px">/${t}</span>` : "—"}</div><div class="s">${t ? Math.round(d / t * 100) + "% · " + f.phases.length + " phases" : "no tasks.md"}</div></div>
-      <div class="card kpi ${f.next ? "clickable" : ""}" ${f.next ? `data-task="${esc(f.next[0])}"` : ""}><div class="l">Next task</div><div class="v mono" style="font-size:17px">${f.next ? esc(f.next[0]) : "—"}</div><div class="s" title="${esc(f.next?.[1] || "")}">${f.next ? esc(f.next[1]) : t ? "All tasks done" : "—"}</div></div>
-      <div class="card kpi"><div class="l">Review</div><div class="v">${f.review?.verdict ? `<span class="verdict v-${f.review.verdict}" style="font-size:14px">${f.review.verdict}</span>` : "—"}</div><div class="s">${f.review ? `${latest(f).gate || "Latest pass"} · ${openInLatest} open` : "no review.md"}</div></div>
-      <div class="card kpi"><div class="l">Decisions</div><div class="v">${c.agent + c.human + c.flagged + c.unlabeled}</div><div class="s"><span style="color:var(--agent)">${c.agent} agent</span> · <span style="color:var(--warn)">${c.flagged} flagged</span> · <span style="color:var(--ok)">${c.human} human</span></div></div>
-      <div class="card kpi"><div class="l">Open questions</div><div class="v" style="${f.markers.length ? "color:var(--bad)" : ""}">${f.markers.length}</div><div class="s">${f.checklists[1] ? `Checklists ${f.checklists[0]}/${f.checklists[1]}` : "no checklists"}</div></div>
-    </div>
-    ${f.markers.length ? `<div class="card sect" style="padding:10px 14px;border-color:color-mix(in srgb, var(--bad) 40%, var(--line))">${f.markers.map(m => `<div>• ${esc(m)}</div>`).join("")}</div>` : ""}
-    <div class="grid2">
-      <div class="card panel"><header>Tasks by phase<span class="r">${t ? `${d} of ${t} done` : ""}</span></header>
-        ${f.next ? `<div class="nextbox" data-task="${esc(f.next[0])}"><b>Next</b> <span class="mono">${esc(f.next[0])}</span> ${esc(f.next[1])}</div>` : ""}${phases}</div>
-      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-        <div class="card panel"><header>User stories<span class="r">${f.stories.length} · progress from [US#] task tags</span></header>${stories}</div>
-        <div class="card panel"><header>Review<span class="r">${f.review ? plural(passes.length, "pass") + " in review.md" : ""}</span></header>${findings}</div>
+      ${notesOpen && notes ? `<div class="hero-notes">${notes}</div>` : ""}
+      ${stepper}
+      <div class="hero-stats" ${stepper ? "" : 'style="margin-top:18px"'}>
+        <div class="stat" data-wtab="tasks" title="${t ? `${Math.round(d / t * 100)}% done · ${plural(f.phases.length, "phase")}` : "No tasks.md"}"><div class="l">Tasks</div><div class="v">${t ? `<span>${d}<small>/${t}</small></span><span class="bar"><i style="width:${Math.round(d / t * 100)}%"></i></span>` : "—"}</div></div>
+        <div class="stat" data-wtab="review" title="${f.review ? `${esc(latest(f).gate || "Latest pass")} · ${plural(openInLatest, "open finding")}` : "No review.md"}"><div class="l">Review</div><div class="v">${f.review?.verdict ? `<span class="verdict v-${f.review.verdict}">${f.review.verdict}</span>` : "—"}${f.review && openInLatest ? `<small>${openInLatest} open</small>` : ""}</div></div>
+        <div class="stat" data-wtab="decisions" title="${c.human} human · ${c.agent} agent · ${c.flagged} flagged · ${c.unlabeled} unattributed"><div class="l">Decisions</div><div class="v">${c.agent + c.human + c.flagged + c.unlabeled}${c.flagged ? `<small style="color:var(--warn)">${c.flagged} flagged</small>` : ""}</div></div>
+        <div class="stat" title="${f.checklists[1] ? `Checklists ${f.checklists[0]}/${f.checklists[1]}` : "No checklists"}"><div class="l">Open questions</div><div class="v ${f.markers.length ? "bad" : ""}">${f.markers.length}</div></div>
+        ${f.next ? `<button class="stat next" data-task="${esc(f.next[0])}"><div class="l">Up next</div><div class="v"><span class="mono">${esc(f.next[0])}</span><span class="t">${esc(f.next[1])}</span><span class="go">→</span></div></button>`
+          : `<div class="stat next" style="cursor:default"><div class="l">Up next</div><div class="v"><span class="t dim">${t ? "All tasks done" : "No tasks yet"}</span></div></div>`}
       </div>
+    </header>
+    ${f.markers.length ? `<div class="card" style="margin-top:14px;padding:10px 14px;border-color:color-mix(in srgb, var(--bad) 40%, var(--line))">${f.markers.map(m => `<div>• ${esc(m)}</div>`).join("")}</div>` : ""}
+    ${overview}
+    <div class="card panel work" id="work">
+      <div class="wtabs" role="tablist">${WTABS.map(([k, label]) => `<button role="tab" class="${wtab === k ? "on" : ""}" aria-selected="${wtab === k}" data-wtab="${k}">${label}${wtabBadge[k]}</button>`).join("")}<span class="r">${wtabNote[wtab]}</span></div>
+      ${wtabBody[wtab]}
     </div>
-    <div class="card panel sect"><header>Decisions<span class="r">## Clarifications sessions, by who decided</span></header>${decisions}</div>
     <div class="sect">${RV.line(f, state.docTab)}${RV.grid(f, `<div class="card panel docs"><header>Documents<span class="r">${docs.length} artifacts</span></header>
       <div class="tabs">${docs.map(x => `<button class="${state.docTab === x ? "on" : ""}" data-doc="${esc(x)}">${esc(x)}${RV.tabCount(f, x)}</button>`).join("")}</div>
       <div class="body">${docBody}</div></div>`)}</div>`;
+  fitOverview();
 }
 
 function render() {
@@ -1605,13 +1804,15 @@ function toast(html) {
 
 document.addEventListener("click", e => {
   if (RV.click(e)) return;
-  const el = e.target.closest("[data-openpath],[data-close],[data-mnav],[data-task],[data-story],[data-tlset],[data-tltoday],[data-tlgroup],[data-zoom],[data-tlsel],[data-open],[data-nav],[data-stage],[data-group],[data-back],[data-toggle-done],[data-phase],[data-sess],[data-dkind],[data-doc],[data-copy],[data-toast]");
+  const el = e.target.closest("[data-openpath],[data-close],[data-mnav],[data-finding],[data-wtab],[data-task],[data-story],[data-tlset],[data-tltoday],[data-tlgroup],[data-zoom],[data-tlsel],[data-open],[data-nav],[data-stage],[data-group],[data-back],[data-toggle-done],[data-phase],[data-sess],[data-dkind],[data-doc],[data-copy],[data-toast]");
   if (!el) return;
   const ds = el.dataset;
   if (ds.open) { location.hash = ds.open; return; }
   if (ds.zoom) { state.zoom = ds.zoom; state.tlCenter = true; render(); return; }
   if ("close" in ds) { state.modal = null; return renderModal(); }
   if (ds.mnav) return stepModal(+ds.mnav);
+  if (ds.finding && state.spec) { state.modal = { type: "finding", spec: state.spec, key: ds.finding }; return renderModal(); }
+  if (ds.wtab) { state.wtab = ds.wtab; render(); if (el.classList.contains("stat")) document.getElementById("work")?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
   if (ds.task && state.spec) { state.modal = { type: "task", spec: state.spec, key: ds.task }; return renderModal(); }
   if (ds.story && state.spec) { state.modal = { type: "story", spec: state.spec, key: ds.story }; return renderModal(); }
   if (ds.tlset) { const [k, v] = ds.tlset.split(":"); state[k] = v; state.tlCenter = true; render(); return; }
@@ -1631,7 +1832,7 @@ document.addEventListener("click", e => {
   else if (ds.phase) { const k = ds.phase; if (ds.auto === "1") state.open.add(k + "!"); else if (state.open.has(k)) state.open.delete(k); else state.open.add(k); }
   else if (ds.sess) { state.open.has(ds.sess) ? state.open.delete(ds.sess) : state.open.add(ds.sess); }
   else if (ds.dkind) state.dkind = ds.dkind;
-  else if (ds.doc) state.docTab = ds.doc;
+  else if (ds.doc) { state.docTab = ds.doc; if ("jump" in ds) { render(); document.querySelector(".panel.docs")?.scrollIntoView({ behavior: "smooth", block: "start" }); return; } }
   else if (ds.copy) { const ok = () => toast(`Copied <code>${esc(ds.copy)}</code>`), no = () => toast(`Copy blocked here. Command: <code>${esc(ds.copy)}</code>`);
     try { navigator.clipboard.writeText(ds.copy).then(ok, no); } catch { no(); } return; }
   else if (ds.toast) { toast(esc(ds.toast) + " (mockup)"); return; }
@@ -1657,7 +1858,7 @@ function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   if (h === "welcome" || h === "splash") { state.view = h; render(); return; }
   if (state.modal && state.modal.spec !== h) state.modal = null;
-  if (byId[h]) { if (state.spec !== h) { state.dkind = "all"; state.docTab = "spec.md"; } state.view = "spec"; state.spec = h; }
+  if (byId[h]) { if (state.spec !== h) { state.dkind = "all"; state.docTab = "spec.md"; state.wtab = "tasks"; } state.view = "spec"; state.spec = h; }
   else { state.view = "project"; state.nav = LISTS[h] || h === "worktrees" ? h : "all"; }
   render();
   document.getElementById("win").scrollIntoView({ block: "start" });

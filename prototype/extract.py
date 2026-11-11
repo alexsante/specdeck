@@ -36,6 +36,11 @@ def clip(s, n):
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
 
 
+def cut(s, n):
+    """Cut to n characters with an ellipsis, without touching markup."""
+    return s if len(s) <= n else s[: n - 1].rstrip() + "…"
+
+
 def sections(text, level):
     """Split markdown into (heading, body) at the given heading level."""
     pat = re.compile(r"^" + "#" * level + r" (.+)$", re.M)
@@ -94,10 +99,38 @@ def parse_story_body(body):
     test = re.search(r"^\*\*Independent Test\*\*:\s*(.+)$", body, re.M)
     acc = re.search(r"^\*\*Acceptance Scenarios\*\*:?", body, re.M)
     scenarios = re.findall(r"^\d+\.\s+(.+)$", body[acc.end():], re.M) if acc else []
-    cut = lambda x, n: x if len(x) <= n else x[: n - 1].rstrip() + "…"
     return {"description": cut(desc, 900), "why": cut(why.group(1).strip(), 500) if why else None,
             "test": cut(test.group(1).strip(), 600) if test else None,
             "scenarios": [cut(x.strip(), 600) for x in scenarios]}
+
+
+COMMENT_RE = re.compile(r"(?s)<!--.*?-->")
+
+
+def section_md(text, names, n):
+    """Markdown body of the first `## ` section whose heading starts with one
+    of names (lowercase), comments removed, cut by cut_blocks."""
+    body = next((b for h, b in sections(text, 2) if h.lower().startswith(names)), None)
+    if body is None:
+        return None
+    return cut_blocks(COMMENT_RE.sub("", body).strip(), n)
+
+
+def intro_md(text, n):
+    """Prose between the header fields and the first `## ` heading."""
+    head = text[: (re.search(r"^## ", text, re.M) or re.search(r"\Z", text)).start()]
+    head = "\n".join(l for l in COMMENT_RE.sub("", head).split("\n")
+                     if not l.startswith("# ") and not HEADER_RE.match(l))
+    return cut_blocks(head.strip(), n) or None
+
+
+def cut_blocks(body, n):
+    """Over n characters, cut at the last blank line before n so no block is split."""
+    if len(body) <= n:
+        return body
+    head = body[:n]
+    at = head.rfind("\n\n")
+    return (head[:at] if at > 0 else head).rstrip() + "\n\n…"
 
 
 def parse_spec(text):
@@ -140,6 +173,7 @@ def parse_spec(text):
         "branch": strip_md(header.get("feature branch", "")) or None,
         "created": header.get("created"),
         "input": clip(header.get("input", ""), 400),
+        "overview": section_md(text, ("overview", "summary"), 3000) or intro_md(text, 3000),
         "clickup": clickup,
         "stories": stories,
         "fr": len(re.findall(r"\*\*FR-\d+", text)),
@@ -150,6 +184,49 @@ def parse_spec(text):
             re.sub(r"`[^`\n]*`", "", re.sub(r"(?ms)^```.*?^```", "", text)))],
         "sessions": sessions,
     }
+
+# ---------------------------------------------------------------- plan.md
+
+CONTEXT_FIELD_RE = re.compile(r"^\s*(?:[-*]\s+)?\*\*([^*]+?)\*\*:\s*(.+)$")
+CONTEXT_BULLET_RE = re.compile(r"^\s*[-*]\s+([A-Za-z][\w /&.+-]{0,39}):\s+(.+)$")
+TABLE_ROW_RE = re.compile(r"^\s*\|(.+)\|\s*$")
+TABLE_SEP_RE = re.compile(r"^\s*:?-+:?\s*$")
+
+
+def table_cells(line):
+    m = TABLE_ROW_RE.match(line)
+    return [c.strip() for c in m.group(1).split("|")] if m else None
+
+
+def is_table_sep(line):
+    cells = table_cells(line)
+    return cells is not None and all(TABLE_SEP_RE.match(c) for c in cells)
+
+
+def parse_context(body):
+    """Technical Context as [key, value] pairs, from `**Key**: value` lines
+    (stock Spec Kit) or the rows of a two-or-more column table."""
+    lines = COMMENT_RE.sub("", body).split("\n")
+    out = []
+    for i, line in enumerate(lines):
+        m = CONTEXT_FIELD_RE.match(line) or CONTEXT_BULLET_RE.match(line)
+        if m:
+            out.append([strip_md(m.group(1)), cut(m.group(2).strip(), 300)])
+            continue
+        cells = table_cells(line)
+        if not cells or len(cells) < 2 or is_table_sep(line):
+            continue
+        if i + 1 < len(lines) and is_table_sep(lines[i + 1]):
+            continue  # header row
+        out.append([strip_md(cells[0]), cut(" · ".join(c for c in cells[1:] if c), 300)])
+    return out
+
+
+def parse_plan(text):
+    if text is None:
+        return None
+    ctx = next((b for h, b in sections(text, 2) if h.lower().startswith("technical context")), "")
+    return {"summary": section_md(text, ("summary",), 2000), "context": parse_context(ctx)}
 
 # ---------------------------------------------------------------- tasks.md
 
@@ -243,7 +320,8 @@ def parse_findings(text):
     while i < len(lines):
         line = lines[i]
         if line.startswith("|") and re.search(r"\|\s*Severity\s*\|", line, re.I):
-            cols = [c.strip().lower() for c in line.strip().strip("|").split("|")]
+            names = [c.strip() for c in line.strip().strip("|").split("|")]
+            cols = [c.lower() for c in names]
             i += 2  # skip separator row
             while i < len(lines) and lines[i].startswith("|"):
                 cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
@@ -260,7 +338,9 @@ def parse_findings(text):
                                 "stories": sorted(set(re.findall(r"\bUS\d+\b", full))),
                                 "owner": strip_md(row.get("owner", "")) or None, "status": status,
                                 "resolved": bool(status and status.split()[0].lower().strip(".,:") in RESOLVED),
-                                "text": clip(desc, 300), "fix": clip(fix, 240)})
+                                "text": clip(desc, 300), "fix": clip(fix, 240),
+                                # The whole row, markdown kept, for the finding's detail view.
+                                "cells": [[strip_md(n), cut(c, 4000)] for n, c in zip(names, cells) if n and c]})
                 i += 1
             continue
         i += 1
@@ -379,6 +459,7 @@ def main(repo, out):
             "files": files,
             "contracts": contracts,
             "spec": parse_spec(read(os.path.join(d, "spec.md"))),
+            "plan": parse_plan(read(os.path.join(d, "plan.md"))),
             "tasks": parse_tasks(read(os.path.join(d, "tasks.md"))),
             "review": parse_review(read(os.path.join(d, "review.md"))),
             "checklists": parse_checklists(d),

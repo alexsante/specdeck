@@ -347,6 +347,13 @@ fn set_appearance(app: AppHandle, zoom: f64, theme: String) -> Result<(), String
     w.set_theme(t).map_err(|e| e.to_string())
 }
 
+/// The diagram viewer's full screen button: the whole window goes full screen.
+#[tauri::command]
+fn set_fullscreen(app: AppHandle, on: bool) -> Result<(), String> {
+    let w = app.get_webview_window("main").ok_or("No main window.")?;
+    w.set_fullscreen(on).map_err(|e| e.to_string())
+}
+
 /// Anything to pull for the open project's branch? Read-only (`git ls-remote`, no fetch).
 #[tauri::command]
 async fn pull_status(app: AppHandle) -> Result<speckit_forge::pull::PullStatus, String> {
@@ -556,7 +563,7 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, pull_status, git_pull, set_appearance, read_doc, open_feature, open_path, open_url, copy_text,
+            current_project, launch_target, pick_folder, open_project_path, recent_projects, forget_recent, gh_ready, pull_status, git_pull, set_appearance, set_fullscreen, read_doc, open_feature, open_path, open_url, copy_text,
             view_worktree, worktree_status, reveal_worktree,
             review::review_status, review::review_counts, review::review_comment, review::review_submit,
             review::review_discard, review::review_reply, review::review_resolve, review::review_edit, review::review_delete
